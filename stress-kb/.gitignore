@@ -26,3 +26,6 @@ build/
 Thumbs.db
 .vscode/
 .idea/
+
+# Test output directories
+tests/output_visit/

@@ -18,7 +18,7 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 | M2 Firmware core | WAITING_ON_USER | user (HG1) | make test & replay verify | protocol.h, features.h, 8 golden vectors (100% pass), stresskb.ino, replay.py |
 | M3 Peripherals | WAITING_ON_USER | user (HG2) | make test (host tests incl. motor, ui, bare-board) | sensors.h, ui.h, motor.h, I2C scan, TEST_MODE, bare-board support |
 | M4 Collection tooling | WAITING_ON_USER | user (HG3) | make test & validate_sessions | schedule.js, validate_sessions.py, replay.py --regen, visit simulation (5 files passed) |
-| M5 Training pipeline | IN_PROGRESS | agent | | Starting synth_data.py, train.py, evaluate.py, GroupKFold leakage assertions |
+| M5 Training pipeline | DONE | agent | make test (pytest 5 passed, 0% leakage) | GroupKFold leakage-free CV, RF & MLP models, feature selection (10 features), ablation study, results markdown generated with synthetic warnings |
 | M6 Deploy model | TODO | agent | | |
 | M7 Decision layer and calibration | TODO | agent | | |
 | M8 Session report | TODO | agent | | |
@@ -66,6 +66,8 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 - Missing peripherals are non-fatal: firmware logs `WARN,SENSOR_BH1750` once, skips OLED/motor, and continues operating seamlessly on bare board.
 - Latin square 4x4 design balances presentation order across 4 conditions {calm, pressure} x {normal, dim light}.
 - Pressure allowed time scales dynamically as 0.75x of the participant's CAL typing pace.
+- Synthetic dataset contains 50 sessions (10 participants x 5 sessions) following Latin-square counterbalanced conditions.
+- Model selection picks top 10 features based on RandomForest Gini importances: `iki_mean`, `iki_std`, `dwell_mean`, `bksp_rate`, `bksp_bursts`, `err_rate`, `corr_latency`, `post_err_slow`, `focus_loss`, `lux_mean_log`.
 
 ## Decisions (spec changes)
 - None. Following PROTOCOL.md, FEATURES.md, and REPORT_SPEC.md exactly as specified.
@@ -74,6 +76,7 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 - None.
 
 ## Log (newest first)
+- 2026-10-11 — M5 — Training pipeline complete: `tools/synth_data.py` generated 50 validated synthetic sessions across 10 participants, `ml/train.py` implemented GroupKFold by participant (asserting 0% participant leakage across train/test splits), per-participant CAL baseline normalisation with clipping [-5, 5], RandomForest (100 trees) and MLP (32x16) models trained on 3-class self-report stress (RF Acc: 94.1%, Macro-F1: 0.644) and binary condition (RF Acc: 99.3%, Macro-F1: 0.993), top 10 features selected and saved to `ml/feature_selection.json`, ablation study evaluated typing dynamics vs multimodal light inputs, `ml/evaluate.py` produced 4 markdown tables and figures banner-marked with `SYNTHETIC — NOT REAL RESULTS`, and unit tests added in `tests/test_ml_pipeline.py` — tests: `make test` (pass, 19 Node + C++ host tests + 5 pytest), `validate_sessions.py` (all 50 files pass) — next: M6 Deploy model.
 - 2026-10-11 — M4 — Collection tooling complete: `web/js/core/schedule.js` (4x4 Latin-square counterbalancing, 5-step visit generator, 0.75x CAL pace calculator), `web/index.html` and `web/js/app.js` updated with interactive visit step selector and 2-min rest reminders, `tools/validate_sessions.py` created (schema 1 + recursive privacy audit + coverage + condition checks), `tools/replay.py --regen` implemented, unit tests added simulating full 5-session visit with 100% validator pass — tests: `make test` (pass, 19 Node + C++ host tests + pytest), `validate_sessions.py` (pass on simulated visit) — next: M5 Training pipeline.
 - 2026-10-11 — M3 — Peripherals module complete: `sensors.h` (BH1750 runtime detection & 1Hz sampling), `ui.h` (OLED screens: main, CAL, link lost, insufficient, uncertain, with pure layout function), `motor.h` (LEDC PWM patterns SINGLE/DOUBLE/LONG, duty cap 200, core 2.x/3.x guards, pure pattern timing), boot-time I2C bus scanner, `TEST_MODE` 3s cycle, and bare-board tolerance; C++ host tests added for motor timing, screen layout, and bare-board execution — tests: `make test` (pass, 16 Node + C++ host tests + pytest) — next: M4 Collection tooling.
 - 2026-10-11 — M2 — Firmware core complete: `config.h`, `protocol.h` (zero-crash parser with 5000-fuzz pass), `features.h` (Welford algorithm, 18 features, window closure engine), `tools/reference_features.py`, 8 golden vectors in `tests/golden/`, `firmware/host_tests` (100% agreement on all golden cases), `stresskb.ino`, and `tools/replay.py` with verification and speed controls — tests: `make test` (pass, 16 Node + C++ host tests + pytest), `replay.py --verify tests/golden/` (100% pass across all 8 golden cases) — next: M3 Peripherals.
