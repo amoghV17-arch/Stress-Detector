@@ -28,7 +28,7 @@ body {
 }
 
 header {
-  padding: 1.5rem 2rem;
+  padding: 1.25rem 2rem;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
@@ -61,7 +61,7 @@ header {
 
 .container {
   max-width: 1000px;
-  margin: 2rem auto;
+  margin: 1.5rem auto;
   padding: 0 1.5rem;
   width: 100%;
 }
@@ -90,7 +90,34 @@ header {
   flex-wrap: wrap;
   gap: 1rem;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 140px;
+}
+
+.form-group label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.form-control {
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-main);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.form-control:focus {
+  outline: 2px solid var(--accent-blue);
+  border-color: transparent;
 }
 
 .toggle-label {
@@ -124,6 +151,17 @@ button.btn {
 button.btn:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);
+}
+
+button.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+button.btn-success {
+  background: var(--accent-green);
+  color: #0f172a;
 }
 
 button.btn-danger {
@@ -181,13 +219,142 @@ button.btn-secondary {
   to { opacity: 1; }
 }
 
+/* Typing Display */
+.typing-box {
+  background: #090d16;
+  border: 2px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.25rem;
+  min-height: 140px;
+  font-size: 1.15rem;
+  line-height: 1.7;
+  letter-spacing: 0.02em;
+  font-family: 'Consolas', 'Courier New', monospace;
+  outline: none;
+  cursor: text;
+  position: relative;
+  user-select: none;
+}
+
+.typing-box:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+}
+
+.char-correct {
+  color: var(--accent-green);
+}
+
+.char-error {
+  color: var(--accent-red);
+  background: rgba(248, 113, 113, 0.2);
+  border-radius: 2px;
+}
+
+.char-current {
+  background: var(--accent-blue);
+  color: #0f172a;
+  border-radius: 2px;
+  animation: cursor-blink 1.2s infinite;
+}
+
+.char-pending {
+  color: var(--text-muted);
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.hud-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.8);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border-color);
+}
+
+.hud-metric {
+  display: flex;
+  flex-direction: column;
+}
+
+.hud-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.hud-val {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.hud-val-pressure {
+  color: var(--accent-red);
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.modal h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.slider-group {
+  margin-bottom: 1.25rem;
+}
+
+.slider-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.slider-header span.val {
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent-blue);
+}
+
 .console {
   background: #090d16;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-family: 'Consolas', 'Fira Code', monospace;
   font-size: 0.85rem;
-  height: 300px;
+  height: 220px;
   overflow-y: auto;
   padding: 0.75rem 1rem;
   display: flex;
@@ -205,11 +372,15 @@ button.btn-secondary {
 .log-warn { color: var(--accent-amber); }
 .log-sys { color: var(--text-muted); font-style: italic; }
 
-.banner-synthetic {
-  background: #f59e0b;
-  color: #000;
-  text-align: center;
-  font-weight: bold;
-  padding: 0.4rem;
-  letter-spacing: 0.05em;
+.privacy-notice {
+  font-size: 0.8rem;
+  color: var(--accent-green);
+  background: rgba(74, 222, 128, 0.1);
+  border: 1px solid rgba(74, 222, 128, 0.25);
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
