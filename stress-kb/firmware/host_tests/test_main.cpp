@@ -9,6 +9,9 @@
 
 #include "protocol.h"
 #include "features.h"
+#include "motor.h"
+#include "ui.h"
+#include "sensors.h"
 
 using namespace stresskb;
 
@@ -79,20 +82,132 @@ void testParser() {
 
 void testParserFuzz() {
     std::cout << "[TEST] Protocol parser fuzzing..." << std::endl;
-    // Fuzz random strings
     srand(42);
     for (int i = 0; i < 5000; i++) {
         int len = rand() % 180;
         std::string s;
         for (int j = 0; j < len; j++) {
-            char c = (char)(rand() % 96 + 32); // printable ASCII
+            char c = (char)(rand() % 96 + 32);
             s += c;
         }
         ParsedCommand cmd;
-        // Must never crash or hang
         ProtocolParser::parseLine(s.c_str(), cmd);
     }
     std::cout << "  -> 5000 fuzz iterations survived with no crashes." << std::endl;
+}
+
+void testMotorPatterns() {
+    std::cout << "[TEST] Motor pattern timing..." << std::endl;
+
+    // SINGLE: 0..150ms ON, >150ms OFF
+    assert(getMotorDutyAtTime(MotorPattern::SINGLE, 0) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::SINGLE, 149) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::SINGLE, 150) == 0);
+    assert(getMotorDutyAtTime(MotorPattern::SINGLE, 200) == 0);
+
+    // DOUBLE: 0..150ms ON, 150..300ms OFF, 300..450ms ON, >450ms OFF
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 0) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 149) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 150) == 0);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 299) == 0);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 300) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 449) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::DOUBLE, 450) == 0);
+
+    // LONG: 0..400ms ON, >400ms OFF
+    assert(getMotorDutyAtTime(MotorPattern::LONG, 0) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::LONG, 399) == MOTOR_DUTY_CAP);
+    assert(getMotorDutyAtTime(MotorPattern::LONG, 400) == 0);
+
+    assert(getMotorPatternDuration(MotorPattern::SINGLE) == 150);
+    assert(getMotorPatternDuration(MotorPattern::DOUBLE) == 450);
+    assert(getMotorPatternDuration(MotorPattern::LONG) == 400);
+
+    std::cout << "  -> Motor pattern timings verified." << std::endl;
+}
+
+void testScreenLayout() {
+    std::cout << "[TEST] Screen layout pure formatting..." << std::endl;
+
+    // 1. MAIN screen
+    DisplayData dMain;
+    dMain.screen = ScreenType::MAIN;
+    dMain.stressLevel = 2; // HIGH
+    dMain.confidence = 0.85f;
+    dMain.patternFlags = FLAG_RUSHED;
+    dMain.lux = 320.0f;
+    dMain.linkOk = true;
+
+    FormattedScreen fs = computeScreenLayout(dMain);
+    assert(std::string(fs.title) == "STRESS: HIGH");
+    assert(std::string(fs.metricLine) == "Conf: 85%");
+    assert(std::string(fs.statusLine) == "Mode: RUSHED");
+    assert(std::string(fs.footerLine).find("Lux: 320") != std::string::npos);
+
+    // 2. LINK_LOST screen
+    DisplayData dLost = dMain;
+    dLost.linkOk = false;
+    FormattedScreen fsLost = computeScreenLayout(dLost);
+    assert(std::string(fsLost.title) == "! LINK LOST !");
+    assert(std::string(fsLost.statusLine) == "Check USB cable");
+
+    // 3. CAL screen
+    DisplayData dCal;
+    dCal.screen = ScreenType::CAL;
+    dCal.calWindows = 4;
+    dCal.linkOk = true;
+    dCal.lux = 250.0f;
+    FormattedScreen fsCal = computeScreenLayout(dCal);
+    assert(std::string(fsCal.title) == "CALIBRATION");
+    assert(std::string(fsCal.metricLine) == "Windows: 4 / 6");
+
+    // 4. INSUFFICIENT screen
+    DisplayData dIns;
+    dIns.screen = ScreenType::INSUFFICIENT;
+    dIns.totalKeys = 12;
+    dIns.linkOk = true;
+    FormattedScreen fsIns = computeScreenLayout(dIns);
+    assert(std::string(fsIns.title) == "INSUFFICIENT");
+    assert(std::string(fsIns.metricLine) == "Keys: 12 (< 20)");
+
+    // 5. UNCERTAIN screen
+    DisplayData dUnc;
+    dUnc.screen = ScreenType::UNCERTAIN;
+    dUnc.confidence = 0.45f;
+    dUnc.linkOk = true;
+    FormattedScreen fsUnc = computeScreenLayout(dUnc);
+    assert(std::string(fsUnc.title) == "UNCERTAIN");
+    assert(std::string(fsUnc.metricLine) == "Conf: 45% (< 60%)");
+
+    std::cout << "  -> Screen layouts verified." << std::endl;
+}
+
+void testBareBoardMode() {
+    std::cout << "[TEST] Bare-board mode (no peripherals attached)..." << std::endl;
+
+    // Simulate missing sensor, display, motor
+    LightSensor sensor;
+    // Without hardware, sensor reads 0 lux and update returns false without crashing
+    float lux = 999.0f;
+    sensor.update(1000, lux);
+
+    DisplayController display;
+    DisplayData dd;
+    dd.linkOk = true;
+    display.render(dd); // does not crash
+
+    MotorController motor;
+    motor.trigger(MotorPattern::DOUBLE, 1000);
+    motor.update(1200);
+    motor.stop(); // does not crash
+
+    // Full protocol session on bare board
+    WindowEngine engine;
+    engine.addKey(1, 100, 50, 'L', 0);
+    engine.addKey(2, 200, 50, 'L', 0);
+    engine.addHeartbeat(35000); // closes window without crash
+
+    std::cout << "  -> Bare-board mode runs smoothly without crashing." << std::endl;
 }
 
 struct ExpectedWindow {
@@ -103,7 +218,6 @@ struct ExpectedWindow {
     std::vector<float> features;
 };
 
-// Simple JSON parser for our known expected.json format
 std::vector<ExpectedWindow> parseExpectedJson(const std::string& path) {
     std::ifstream f(path);
     if (!f.is_open()) {
@@ -136,7 +250,6 @@ std::vector<ExpectedWindow> parseExpectedJson(const std::string& path) {
         std::stringstream ss(arrStr);
         std::string valStr;
         while (std::getline(ss, valStr, ',')) {
-            // Trim whitespace
             size_t first = valStr.find_first_not_of(" \t\r\n");
             size_t last = valStr.find_last_not_of(" \t\r\n");
             if (first != std::string::npos && last != std::string::npos) {
@@ -153,7 +266,6 @@ void verifyGolden(const std::string& name) {
     std::string csvPath = "../../tests/golden/" + name + ".csv";
     std::string jsonPath = "../../tests/golden/" + name + ".expected.json";
 
-    // Try relative paths
     std::ifstream testF(csvPath);
     if (!testF.is_open()) {
         csvPath = "tests/golden/" + name + ".csv";
@@ -205,7 +317,6 @@ void verifyGolden(const std::string& name) {
             float absErr = std::abs(cVal - eVal);
             float relErr = (std::abs(eVal) > 1e-5f) ? (absErr / std::abs(eVal)) : absErr;
 
-            // Contract per FEATURES.md: relative error <= 1e-3 or absolute error <= 1e-6
             bool pass = (absErr <= 1e-3f) || (relErr <= 1e-3f);
             if (!pass) {
                 std::cerr << "FAIL in " << name << " win " << c.winId << " feat " << (f + 1)
@@ -225,6 +336,9 @@ int main() {
 
     testParser();
     testParserFuzz();
+    testMotorPatterns();
+    testScreenLayout();
+    testBareBoardMode();
 
     std::vector<std::string> goldenCases = {
         "normal_typing",
