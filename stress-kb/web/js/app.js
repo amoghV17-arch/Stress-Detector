@@ -1,6 +1,7 @@
 import { SerialManager } from './serial.js';
 import { TypingEngine } from './core/typing_engine.js';
 import { getRandomParagraph } from './core/paragraphs.js';
+import { generateParticipantSchedule, calculatePressureAllowedTime } from './core/schedule.js';
 
 const serialManager = new SerialManager();
 let currentEngine = null;
@@ -10,6 +11,8 @@ let sessionDurationSeconds = 300;
 let remainingSeconds = 300;
 let liveScore = 0;
 let usedParagraphIndices = [];
+let currentSchedule = [];
+let calBaselinePace = { chars: 0, durationS: 180 };
 
 // DOM Elements
 const btnConnect = document.getElementById('btn-connect');
@@ -20,6 +23,7 @@ const consoleOutput = document.getElementById('console-output');
 const btnClearConsole = document.getElementById('btn-clear-console');
 const btnSendHello = document.getElementById('btn-send-hello');
 
+const selectVisitStep = document.getElementById('select-visit-step');
 const cardSetup = document.getElementById('card-setup');
 const inputUserId = document.getElementById('input-user-id');
 const selectMode = document.getElementById('select-mode');
@@ -47,6 +51,35 @@ const valRushed = document.getElementById('val-rushed');
 const valTired = document.getElementById('val-tired');
 const btnSaveSession = document.getElementById('btn-save-session');
 const btnCloseModal = document.getElementById('btn-close-modal');
+
+function updateScheduleDropdown() {
+  const userId = (inputUserId.value || 'u01').trim();
+  currentSchedule = generateParticipantSchedule(userId);
+  selectVisitStep.innerHTML = '';
+  currentSchedule.forEach((step, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `Step ${step.step}: ${step.name}`;
+    selectVisitStep.appendChild(opt);
+  });
+  applySelectedScheduleStep();
+}
+
+function applySelectedScheduleStep() {
+  const idx = parseInt(selectVisitStep.value, 10) || 0;
+  const step = currentSchedule[idx];
+  if (step) {
+    selectMode.value = step.mode;
+    selectCondition.value = step.condition;
+    selectLighting.value = step.lighting;
+  }
+}
+
+inputUserId.addEventListener('input', updateScheduleDropdown);
+selectVisitStep.addEventListener('change', applySelectedScheduleStep);
+
+// Initial populate
+updateScheduleDropdown();
 
 function logToConsole(text, type = 'sys') {
   const entry = document.createElement('div');
@@ -149,10 +182,13 @@ function renderTypingDisplay(cursor) {
 // Start Session
 btnStartSession.addEventListener('click', () => {
   const userId = (inputUserId.value || 'u01').trim();
+  const stepIdx = parseInt(selectVisitStep.value, 10) || 0;
+  const currentStepDef = currentSchedule[stepIdx] || {};
+
   const mode = selectMode.value; // CAL or RUN
   const condition = selectCondition.value; // calm or pressure
   const lighting = selectLighting.value;
-  const sessionId = `s_${Date.now().toString(36)}`;
+  const sessionId = currentStepDef.sessionId || `s0${stepIdx + 1}`;
 
   const chosen = getRandomParagraph(usedParagraphIndices);
   usedParagraphIndices.push(chosen.index);
@@ -172,7 +208,6 @@ btnStartSession.addEventListener('click', () => {
       hudAccuracy.textContent = `${acc}%`;
 
       if (condition === 'pressure') {
-        // Live score with accuracy penalty
         liveScore = Math.max(0, p.correct * 10 - p.errors * 25);
         hudScore.textContent = liveScore;
       }
@@ -192,7 +227,20 @@ btnStartSession.addEventListener('click', () => {
   typingContainer.focus();
 
   // Mode durations: CAL = 180s (3 min), RUN = 300s (5 min)
-  sessionDurationSeconds = mode === 'CAL' ? 180 : 300;
+  if (mode === 'CAL') {
+    sessionDurationSeconds = 180;
+  } else {
+    if (condition === 'pressure') {
+      // Allowed time = 0.75 * time at CAL pace
+      sessionDurationSeconds = calculatePressureAllowedTime(
+        calBaselinePace.chars,
+        calBaselinePace.durationS,
+        targetText.length
+      );
+    } else {
+      sessionDurationSeconds = 300;
+    }
+  }
   remainingSeconds = sessionDurationSeconds;
 
   if (condition === 'pressure') {
@@ -287,11 +335,26 @@ function finishSession() {
 
   if (currentEngine) {
     currentEngine.stop();
+    if (selectMode.value === 'CAL') {
+      calBaselinePace = {
+        chars: currentEngine.cursor,
+        durationS: sessionDurationSeconds
+      };
+      logToConsole(`Protocol: Calibration pace recorded (${calBaselinePace.chars} chars in ${calBaselinePace.durationS}s). Pressure time will be scaled to 0.75x.`, 'sys');
+    }
   }
 
   cardTask.style.display = 'none';
   cardSetup.style.display = 'block';
   modalSelfReport.style.display = 'flex';
+
+  // Auto-advance to next visit step
+  const nextIdx = (parseInt(selectVisitStep.value, 10) || 0) + 1;
+  if (nextIdx < currentSchedule.length) {
+    selectVisitStep.value = nextIdx;
+    applySelectedScheduleStep();
+    logToConsole('Protocol Reminder: Participant should take a >= 2 minute rest before starting the next session.', 'sys');
+  }
 }
 
 btnSaveSession.addEventListener('click', () => {

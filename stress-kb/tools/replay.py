@@ -147,6 +147,36 @@ def replay_file(file_path: str, port: Optional[str] = None, speed: float = 0, ve
     return True
 
 
+def regen_session(file_path: str):
+    print(f"Regenerating features for {file_path}...")
+    if not file_path.endswith('.json'):
+        print(f"Skipping non-JSON file: {file_path}")
+        return
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    lines = load_events(file_path)
+    new_windows = process_event_stream(lines)
+
+    # Convert to schema 1 window objects
+    updated_windows = []
+    for w in new_windows:
+        updated_windows.append({
+            'win_id': w['win_id'],
+            't_end': w['t_end'],
+            'n_keys': w['n_keys'],
+            'valid': w['valid'],
+            'f': w['features']
+        })
+
+    data['windows'] = updated_windows
+    with open(file_path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
+
+    print(f"Updated {len(updated_windows)} windows in {file_path}")
+
+
 def main():
     parser = argparse.ArgumentParser(description="StressKB Replay Tool")
     parser.add_argument("input", help="CSV or session JSON file, or directory for batch verify")
@@ -156,6 +186,15 @@ def main():
     parser.add_argument("--regen", action="store_true", help="Regenerate FEAT lines and update session JSON")
 
     args = parser.parse_args()
+
+    if args.regen:
+        if os.path.isdir(args.input):
+            files = glob.glob(os.path.join(args.input, "**/*.json"), recursive=True)
+            for f in files:
+                regen_session(f)
+        else:
+            regen_session(args.input)
+        return
 
     files = []
     if os.path.isdir(args.input):

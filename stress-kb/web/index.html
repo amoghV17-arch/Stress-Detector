@@ -48,25 +48,31 @@
           <label for="input-user-id">Participant ID</label>
           <input type="text" id="input-user-id" class="form-control" value="u01" maxlength="8">
         </div>
+        <div class="form-group" style="min-width: 220px;">
+          <label for="select-visit-step">Visit Schedule (Latin Square)</label>
+          <select id="select-visit-step" class="form-control">
+            <!-- Populated dynamically by schedule.js -->
+          </select>
+        </div>
         <div class="form-group">
           <label for="select-mode">Task Mode</label>
           <select id="select-mode" class="form-control">
-            <option value="CAL">CAL (Baseline Calibration - 3 min)</option>
-            <option value="RUN" selected>RUN (Experimental Session - 5 min)</option>
+            <option value="CAL">CAL (Baseline - 3 min)</option>
+            <option value="RUN" selected>RUN (Experiment - 5 min)</option>
           </select>
         </div>
         <div class="form-group">
           <label for="select-condition">Condition</label>
           <select id="select-condition" class="form-control">
-            <option value="calm" selected>Calm (No countdown, relaxed)</option>
-            <option value="pressure">Pressure (Visible countdown + penalty)</option>
+            <option value="calm" selected>Calm (Relaxed)</option>
+            <option value="pressure">Pressure (Timer + penalty)</option>
           </select>
         </div>
         <div class="form-group">
           <label for="select-lighting">Lighting Context</label>
           <select id="select-lighting" class="form-control">
-            <option value="normal" selected>Normal Room Light</option>
-            <option value="dim">Dim / Low Light</option>
+            <option value="normal" selected>Normal Light</option>
+            <option value="dim">Dim Light</option>
           </select>
         </div>
       </div>
