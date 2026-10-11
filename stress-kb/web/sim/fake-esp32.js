@@ -53,6 +53,8 @@ export class FakeESP32 {
 
     switch (cmd) {
       case 'HELLO':
+        this.clearWatchdog();
+        this.session = null;
         this.emit(`READY,${this.fwVer},${this.protoVer}`);
         break;
 
@@ -160,6 +162,11 @@ export class FakeESP32 {
     const cls = parts[4];
     const err = parseInt(parts[5], 10);
 
+    if (!Number.isFinite(seq) || !Number.isFinite(tDown) || !Number.isFinite(dwell) || !Number.isFinite(err)) {
+      this.emit('WARN,MALFORMED,K');
+      return;
+    }
+
     this.checkSeq(seq);
     const event = { type: 'K', seq, t: tDown, dwell, cls, err };
     this.session.events.push(event);
@@ -177,6 +184,11 @@ export class FakeESP32 {
     const t = parseInt(parts[2], 10);
     const v = parseInt(parts[3], 10);
 
+    if (!Number.isFinite(seq) || !Number.isFinite(t) || !Number.isFinite(v)) {
+      this.emit('WARN,MALFORMED,F');
+      return;
+    }
+
     this.checkSeq(seq);
     const event = { type: 'F', seq, t, v };
     this.session.events.push(event);
@@ -187,6 +199,10 @@ export class FakeESP32 {
   handleHeartbeat(parts) {
     if (!this.session) return;
     const t = parseInt(parts[1], 10);
+    if (!Number.isFinite(t)) {
+      this.emit('WARN,MALFORMED,T');
+      return;
+    }
     this.session.lastEventTime = t;
     this.checkWindows(t);
   }
@@ -195,6 +211,10 @@ export class FakeESP32 {
     if (!this.session) return;
     const t = parseInt(parts[1], 10);
     const lux = parseFloat(parts[2]);
+    if (!Number.isFinite(t) || !Number.isFinite(lux)) {
+      this.emit('WARN,MALFORMED,R');
+      return;
+    }
     this.session.luxSamples.push({ t, lux });
     this.checkWindows(t);
   }
@@ -218,6 +238,9 @@ export class FakeESP32 {
         this.emit('WARN,LINK_LOST,No events for 5s');
       }
     }, 5000);
+    if (this.watchdogTimer && typeof this.watchdogTimer.unref === 'function') {
+      this.watchdogTimer.unref();
+    }
   }
 
   clearWatchdog() {
@@ -230,6 +253,7 @@ export class FakeESP32 {
   // Windows: 30 000 ms long, 15 000 ms hop.
   // Window k covers [15000 * k, 15000 * k + 30000)
   checkWindows(currentT) {
+    if (!Number.isFinite(currentT)) return;
     while (true) {
       const k = this.session.openWindowIdx;
       const winStart = 15000 * k;

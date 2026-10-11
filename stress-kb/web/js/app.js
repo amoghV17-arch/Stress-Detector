@@ -3,6 +3,7 @@ import { TypingEngine } from './core/typing_engine.js';
 import { getRandomParagraph } from './core/paragraphs.js';
 import { generateParticipantSchedule, calculatePressureAllowedTime } from './core/schedule.js';
 import { parseAndAnalyzeSession, generateCSV } from './core/report.js';
+import { DEMO_SESSION } from './core/demo_session.js';
 
 const serialManager = new SerialManager();
 let currentEngine = null;
@@ -32,6 +33,7 @@ const selectCondition = document.getElementById('select-condition');
 const selectLighting = document.getElementById('select-lighting');
 const checkConsent = document.getElementById('check-consent');
 const btnStartSession = document.getElementById('btn-start-session');
+const btnRunDemo = document.getElementById('btn-run-demo');
 
 const cardTask = document.getElementById('card-task');
 const hudTimer = document.getElementById('hud-timer');
@@ -393,6 +395,65 @@ function switchToTab(tab) {
     cardTask.style.display = 'none';
     cardConsole.style.display = 'none';
     sectionReport.style.display = 'block';
+  }
+}
+
+if (btnRunDemo) {
+  btnRunDemo.addEventListener('click', runDemoSession);
+}
+
+async function runDemoSession() {
+  if (btnRunDemo.disabled) return;
+  btnRunDemo.disabled = true;
+  btnRunDemo.textContent = '⏳ Running Demo...';
+
+  try {
+    if (!serialManager.isConnected) {
+      logToConsole('Demo Mode: Connecting software emulator...', 'sys');
+      await serialManager.connect(true);
+    }
+
+    logToConsole('⚡ Starting 1-Click Stressed Session Demo (Accelerated Replay)...', 'sys');
+
+    cardSetup.style.display = 'none';
+    cardTask.style.display = 'block';
+    hudTimer.textContent = 'Demo Mode';
+    hudProgress.textContent = 'Replaying Stressed Typing';
+    hudAccuracy.textContent = 'Errors: High';
+    hudScoreContainer.style.display = 'block';
+    typingContainer.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--accent-amber); font-weight: 500;">⚡ Demonstrating real-time stress detection under time pressure & high error rates...</div>';
+
+    await serialManager.sendLine('S,START,demo_stress_01,u01,RUN');
+
+    for (let i = 0; i < DEMO_SESSION.windows.length; i++) {
+      const w = DEMO_SESSION.windows[i];
+      hudProgress.textContent = `Window ${w.win_id + 1} of ${DEMO_SESSION.windows.length} (${(w.t_end / 1000)}s)`;
+
+      for (let k = 0; k < 5; k++) {
+        const cls = (w.pred.cls === 2 && k % 2 === 0) ? 'B' : 'L';
+        const err = (w.pred.cls === 2) ? 1 : 0;
+        await serialManager.sendLine(`K,${i * 5 + k + 1},${w.t_end - (5 - k) * 500},120,${cls},${err}`);
+      }
+      await serialManager.sendLine(`T,${w.t_end}`);
+      await new Promise(r => setTimeout(r, 350));
+    }
+
+    await serialManager.sendLine('S,STOP');
+    logToConsole('⚡ Demo Session Complete! Rendering 11-section report...', 'sys');
+
+    setTimeout(() => {
+      cardTask.style.display = 'none';
+      cardSetup.style.display = 'block';
+      switchToTab('report');
+      renderReportView(DEMO_SESSION, 'demo_pressure_session.json');
+      btnRunDemo.disabled = false;
+      btnRunDemo.textContent = '⚡ 1-Click Demo (Stressed Session)';
+    }, 600);
+
+  } catch (err) {
+    logToConsole(`Demo Error: ${err.message}`, 'warn');
+    btnRunDemo.disabled = false;
+    btnRunDemo.textContent = '⚡ 1-Click Demo (Stressed Session)';
   }
 }
 
