@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StressKB — Typing Stress Detection</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+        <path d="M4 6h16M4 12h16M4 18h7"/>
+      </svg>
+      <h1>StressKB</h1>
+      <span class="badge">v0.1 Prototype</span>
+    </div>
+    <div id="status-badge" class="status-badge status-disconnected">
+      <span class="status-dot"></span>
+      <span id="status-text">Disconnected</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2 class="card-title">Device Connection</h2>
+      <div class="control-row">
+        <label class="toggle-label">
+          <input type="checkbox" id="toggle-simulator" checked>
+          <span>Use software simulator (no hardware required)</span>
+        </label>
+      </div>
+
+      <div class="control-row">
+        <button id="btn-connect" class="btn">Connect</button>
+        <button id="btn-send-hello" class="btn btn-secondary" disabled>Send HELLO,1</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title">
+        <span>Serial Activity Console</span>
+        <button id="btn-clear-console" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Clear</button>
+      </div>
+      <div id="console-output" class="console">
+        <div class="log-entry log-sys">[System] Ready. Toggle simulator or connect to Web Serial (115200 baud).</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

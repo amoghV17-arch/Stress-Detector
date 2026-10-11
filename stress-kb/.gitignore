@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# Real participant data (privacy contract)
+ml/data/real/
+!ml/data/real/.gitkeep
+
+# Build artifacts
+*.o
+*.exe
+*.bin
+*.elf
+firmware/host_tests/test_runner
+firmware/host_tests/test_runner.exe
+build/
+
+# OS and Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
