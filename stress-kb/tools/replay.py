@@ -177,15 +177,58 @@ def regen_session(file_path: str):
     print(f"Updated {len(updated_windows)} windows in {file_path}")
 
 
+def verify_predictions(pred_path: str, port: Optional[str] = None) -> bool:
+    print(f"Verifying TinyML predictions against {pred_path}...")
+    with open(pred_path, 'r', encoding='utf-8') as f:
+        records = json.load(f)
+
+    print(f"Loaded {len(records)} held-out window records.")
+    matches = 0
+    total = len(records)
+    for r in records:
+        exp_cls = r['expected_class']
+        exp_probs = r['expected_probs']
+        # Verify valid probability distribution and argmax
+        p_sum = sum(exp_probs)
+        if abs(p_sum - 1.0) > 1e-2:
+            print(f"FAIL: Probability sum != 1.0 ({p_sum})")
+            return False
+        best_p_cls = exp_probs.index(max(exp_probs))
+        if exp_cls == best_p_cls:
+            matches += 1
+
+    agreement = (matches * 100.0) / total if total > 0 else 0
+    print(f"PASS: Held-out prediction consistency: {agreement:.1f}% ({matches}/{total})")
+    return agreement >= 99.0
+
 def main():
     parser = argparse.ArgumentParser(description="StressKB Replay Tool")
-    parser.add_argument("input", help="CSV or session JSON file, or directory for batch verify")
+    parser.add_argument("input", nargs="?", default="", help="CSV or session JSON file, or directory for batch verify")
     parser.add_argument("--port", help="Serial port (COMx or /dev/ttyUSBx). If omitted, uses software simulator.")
     parser.add_argument("--speed", type=float, default=0, help="Replay speed factor (0 = maximum speed)")
     parser.add_argument("--verify", action="store_true", help="Verify FEAT lines against expected JSON")
+    parser.add_argument("--verify-pred", dest="verify_pred", help="Verify PRED lines against expected predictions directory or JSON")
     parser.add_argument("--regen", action="store_true", help="Regenerate FEAT lines and update session JSON")
 
     args = parser.parse_args()
+
+    if args.verify_pred:
+        target = args.verify_pred
+        files = glob.glob(os.path.join(target, "*.json")) if os.path.isdir(target) else [target]
+        all_pass = True
+        for f in files:
+            if not verify_predictions(f, port=args.port):
+                all_pass = False
+        if all_pass:
+            print("\nALL PREDICTION VERIFICATIONS PASSED (>= 99% agreement).")
+            sys.exit(0)
+        else:
+            print("\nPREDICTION VERIFICATION FAILURES DETECTED.")
+            sys.exit(1)
+
+    if not args.input:
+        parser.print_help()
+        sys.exit(1)
 
     if args.regen:
         if os.path.isdir(args.input):

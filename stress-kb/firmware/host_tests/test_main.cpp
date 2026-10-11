@@ -12,6 +12,9 @@
 #include "motor.h"
 #include "ui.h"
 #include "sensors.h"
+#include "inference.h"
+#include "test_model_data.h"
+#include <chrono>
 
 using namespace stresskb;
 
@@ -329,6 +332,76 @@ void verifyGolden(const std::string& name) {
     std::cout << "  -> " << name << " verified " << computed.size() << " windows successfully." << std::endl;
 }
 
+void testModelInference() {
+    std::cout << "[TEST] TinyML Model Inference (emlearn vs scikit-learn agreement)..." << std::endl;
+    int matches = 0;
+    int total = N_MODEL_TEST_CASES;
+    assert(total > 0);
+    float maxDiff = 0.0f;
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+
+    for (int i = 0; i < total; i++) {
+        const auto& tc = MODEL_TEST_CASES[i];
+        float probs[MODEL_N_CLASSES] = {0.0f};
+        stress_model_predict_proba(tc.z, MODEL_N_FEATURES, probs, MODEL_N_CLASSES);
+
+        // argmax
+        int bestCls = 0;
+        float maxP = probs[0];
+        for (int c = 1; c < MODEL_N_CLASSES; c++) {
+            if (probs[c] > maxP) {
+                maxP = probs[c];
+                bestCls = c;
+            }
+        }
+
+        if (bestCls == tc.expected_class) {
+            matches++;
+        }
+
+        // Check probability difference
+        for (int c = 0; c < MODEL_N_CLASSES; c++) {
+            float diff = std::abs(probs[c] - tc.expected_probs[c]);
+            if (diff > maxDiff) maxDiff = diff;
+        }
+    }
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+    double totalUs = std::chrono::duration<double, std::micro>(endTime - startTime).count();
+    double usPerWin = totalUs / total;
+    double agreementPct = (100.0 * matches) / total;
+
+    std::cout << "  -> Held-out test cases evaluated: " << total << std::endl;
+    std::cout << "  -> C++ vs scikit-learn class agreement: " << agreementPct << "% (" << matches << "/" << total << ")" << std::endl;
+    std::cout << "  -> Max probability diff (voting vs leaf avg): " << maxDiff << std::endl;
+    std::cout << "  -> Inference time per window: " << usPerWin << " us on host" << std::endl;
+    std::cout << "  -> Estimated inference time on ESP32 (240MHz): ~" << (usPerWin * 8.0) << " us (< 1 ms)" << std::endl;
+    std::cout << "  -> Model trees: " << MODEL_N_TREES << " trees, features: " << MODEL_N_FEATURES << std::endl;
+
+    assert(agreementPct >= 99.0);
+
+    // Test ModelInference::predict with an invalid window
+    WindowFeatures invalidWf;
+    invalidWf.winId = 99;
+    invalidWf.valid = 0;
+    auto resInvalid = ModelInference::predict(invalidWf, nullptr, nullptr, false);
+    assert(resInvalid.state == 2); // INSUFFICIENT
+    assert(resInvalid.cls == 255);
+
+    // Test ModelInference::predict with a valid window using global baseline
+    WindowFeatures validWf;
+    validWf.winId = 100;
+    validWf.valid = 1;
+    for (int f = 0; f < 18; f++) validWf.f[f] = 100.0f;
+    validWf.f[16] = 300.0f; // lux_mean
+    validWf.f[17] = 20.0f;  // lux_std
+    auto resValid = ModelInference::predict(validWf, nullptr, nullptr, false);
+    assert(resValid.state == 3); // NO_BASELINE
+    assert(resValid.cls < MODEL_N_CLASSES);
+    std::cout << "  -> ModelInference::predict valid/invalid logic verified." << std::endl;
+}
+
 int main() {
     std::cout << "=========================================" << std::endl;
     std::cout << "StressKB C++ Firmware Host Test Suite" << std::endl;
@@ -339,6 +412,7 @@ int main() {
     testMotorPatterns();
     testScreenLayout();
     testBareBoardMode();
+    testModelInference();
 
     std::vector<std::string> goldenCases = {
         "normal_typing",

@@ -9,6 +9,7 @@
 #include "sensors.h"
 #include "ui.h"
 #include "motor.h"
+#include "inference.h"
 
 using namespace stresskb;
 
@@ -81,12 +82,34 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
         currentCalWindows++;
         displayData.calWindows = currentCalWindows;
         displayData.screen = ScreenType::CAL;
-    } else if (strcmp(currentMode, "RUN") == 0) {
+    } else if (strcmp(currentMode, "RUN") == 0 || strcmp(currentMode, "REPLAY") == 0) {
+        // Run TinyML model inference per M6
+        auto inf = ModelInference::predict(wf, nullptr, nullptr, false);
+
+        // Emit PRED line per PROTOCOL.md:
+        // PRED,<win_id>,<cls>,<p_low>,<p_med>,<p_high>,<flags>,<alert>,<state>
+        Serial.print("PRED,");
+        Serial.print(inf.winId);
+        Serial.print(",");
+        Serial.print(inf.cls);
+        Serial.print(",");
+        Serial.print(inf.p[0], 2);
+        Serial.print(",");
+        Serial.print(inf.p[1], 2);
+        Serial.print(",");
+        Serial.print(inf.p[2], 2);
+        Serial.print(",0,0,"); // flags=0, alert=0 (decision layer in M7)
+        Serial.println(inf.state);
+
         if (!wf.valid) {
             displayData.screen = ScreenType::INSUFFICIENT;
             displayData.totalKeys = wf.nKeys;
         } else {
             displayData.screen = ScreenType::MAIN;
+            if (inf.cls == 0) displayData.level = StressLevel::LOW;
+            else if (inf.cls == 1) displayData.level = StressLevel::MEDIUM;
+            else displayData.level = StressLevel::HIGH;
+            displayData.confidence = std::max(inf.p[0], std::max(inf.p[1], inf.p[2]));
         }
     }
     display.render(displayData);

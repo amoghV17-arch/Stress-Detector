@@ -1,5 +1,5 @@
 CXX ?= g++
-CXXFLAGS ?= -std=c++17 -Wall -Wextra -I../stresskb
+CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wno-unused-parameter -I../stresskb
 
 TARGET = test_runner.exe
 SRCS = test_main.cpp
