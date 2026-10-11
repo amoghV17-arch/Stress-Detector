@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -17,6 +18,10 @@
       </svg>
       <h1>StressKB</h1>
       <span class="badge">v0.1 TinyML</span>
+    </div>
+    <div class="header-actions">
+      <button id="btn-nav-typing" class="btn btn-secondary active-nav">Typing Task</button>
+      <button id="btn-nav-report" class="btn btn-secondary">Report Viewer</button>
     </div>
     <div id="status-badge" class="status-badge status-disconnected">
       <span class="status-dot"></span>
@@ -124,13 +129,150 @@
     </section>
 
     <!-- Serial Activity Console -->
-    <section class="card">
+    <section class="card" id="card-console">
       <div class="card-title">
         <span>Serial Activity Console</span>
         <button id="btn-clear-console" class="btn btn-secondary" style="padding: 0.3rem 0.8rem; font-size: 0.8rem;">Clear</button>
       </div>
       <div id="console-output" class="console">
         <div class="log-entry log-sys">[System] Ready. Connect to hardware device or use the software simulator.</div>
+      </div>
+    </section>
+
+    <!-- Session Report Viewer Section -->
+    <section id="section-report" class="card report-view" style="display: none;">
+      <div class="report-header-controls">
+        <div class="report-file-picker">
+          <label class="btn btn-secondary" for="input-report-file" style="cursor: pointer;">
+            📂 Load Session JSON
+          </label>
+          <input type="file" id="input-report-file" accept=".json" style="display: none;">
+          <span id="report-file-name" style="font-size: 0.85rem; color: var(--text-muted);">No file selected</span>
+        </div>
+        <div class="report-export-buttons">
+          <button id="btn-report-download-json" class="btn btn-secondary" disabled>Download JSON</button>
+          <button id="btn-report-download-csv" class="btn btn-secondary" disabled>Download CSV</button>
+          <button id="btn-report-print" class="btn btn-success" disabled>Print / Save PDF</button>
+        </div>
+      </div>
+
+      <!-- Synthetic Banner -->
+      <div id="report-synth-banner" class="synth-banner" style="display: none;">
+        ⚠️ SYNTHETIC — NOT REAL RESULTS
+      </div>
+
+      <!-- Insufficient Data Warning -->
+      <div id="report-insufficient-banner" class="insufficient-banner" style="display: none;">
+        <strong>⚠️ Insufficient Data:</strong> Fewer than 60% valid windows or fewer than 4 valid windows recorded. Overall stress score, behaviour patterns, and trends are omitted per validity criteria.
+      </div>
+
+      <!-- Default Baseline Warning -->
+      <div id="report-default-baseline-banner" class="warning-banner" style="display: none;">
+        <strong>ℹ Default Baseline Used:</strong> Participant has not completed a personal calibration session. Metrics and z-scores are evaluated against default population statistics.
+      </div>
+
+      <!-- Section 1: Session Summary -->
+      <div class="report-section" id="rep-sec-summary">
+        <h3 class="rep-title">1. Session Summary</h3>
+        <div class="summary-grid" id="rep-summary-grid"></div>
+      </div>
+
+      <!-- Section 2: Overall Stress -->
+      <div class="report-section" id="rep-sec-overall">
+        <h3 class="rep-title">2. Overall Stress Level</h3>
+        <div class="stress-badge-container">
+          <div id="rep-stress-level" class="stress-badge stress-low">Low</div>
+          <div class="stress-metrics">
+            <div>Score: <strong id="rep-stress-score">0.00</strong> / 1.00</div>
+            <div>Confidence: <strong id="rep-stress-confidence">0%</strong></div>
+          </div>
+        </div>
+        <div class="distribution-bars" id="rep-distribution-bars"></div>
+      </div>
+
+      <!-- Calibration Summary (Only for CAL mode) -->
+      <div class="report-section" id="rep-sec-calibration" style="display: none;">
+        <h3 class="rep-title">Baseline Calibration Parameters (18 Features)</h3>
+        <div class="table-container">
+          <table class="report-table" id="rep-cal-table">
+            <thead>
+              <tr><th>#</th><th>Feature</th><th>Name</th><th>Baseline Mean (&mu;)</th><th>Baseline Std (&sigma;)</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 3: Timeline -->
+      <div class="report-section" id="rep-sec-timeline">
+        <h3 class="rep-title">3. Stress Timeline & Alert Markers</h3>
+        <div class="chart-container" style="position: relative; height: 260px; width: 100%;">
+          <canvas id="rep-timeline-chart"></canvas>
+        </div>
+      </div>
+
+      <!-- Section 4: Indicators Table -->
+      <div class="report-section" id="rep-sec-indicators">
+        <h3 class="rep-title">4. Typing Pattern Indicators (18 Features)</h3>
+        <p class="section-desc">Evaluated as z-scores vs baseline (&mu;, &sigma;). Top 3 contributors highlighted in gold.</p>
+        <div class="table-container">
+          <table class="report-table" id="rep-indicators-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Feature</th>
+                <th>Session Mean</th>
+                <th>z-Score</th>
+                <th>Trend</th>
+                <th>Clinical / Behavioral Meaning</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Section 5: Behaviour Patterns -->
+      <div class="report-section" id="rep-sec-patterns">
+        <h3 class="rep-title">5. Behaviour Pattern Flags</h3>
+        <div class="pattern-grid" id="rep-patterns-grid"></div>
+      </div>
+
+      <!-- Section 6: Trends -->
+      <div class="report-section" id="rep-sec-trends">
+        <h3 class="rep-title">6. Session Progression Trends</h3>
+        <p class="section-desc">Comparing the first third of valid windows to the final third.</p>
+        <div class="trends-grid" id="rep-trends-grid"></div>
+      </div>
+
+      <!-- Section 7: Context -->
+      <div class="report-section" id="rep-sec-context">
+        <h3 class="rep-title">7. Environmental Context (Ambient Light)</h3>
+        <div id="rep-context-content"></div>
+      </div>
+
+      <!-- Section 8: Reliability -->
+      <div class="report-section" id="rep-sec-reliability">
+        <h3 class="rep-title">8. Data Quality & Reliability</h3>
+        <div class="reliability-grid" id="rep-reliability-grid"></div>
+      </div>
+
+      <!-- Section 9: Vibration Alerts -->
+      <div class="report-section" id="rep-sec-alerts">
+        <h3 class="rep-title">9. Haptic Vibration Alerts</h3>
+        <div id="rep-alerts-content"></div>
+      </div>
+
+      <!-- Section 10: Self-Report Comparison -->
+      <div class="report-section" id="rep-sec-selfreport">
+        <h3 class="rep-title">10. Post-Session Self-Report Comparison</h3>
+        <div id="rep-selfreport-content"></div>
+      </div>
+
+      <!-- Section 11: Disclaimer & Break Advice -->
+      <div class="report-section" id="rep-sec-disclaimer">
+        <h3 class="rep-title">11. Scientific Disclaimer & Ergonomic Guidance</h3>
+        <div class="disclaimer-box" id="rep-disclaimer-content"></div>
       </div>
     </section>
   </main>
@@ -167,8 +309,9 @@
         <input type="range" id="slider-tired" min="1" max="5" value="3">
       </div>
 
-      <div class="control-row" style="margin-top: 1.5rem; justify-content: flex-end;">
-        <button id="btn-save-session" class="btn btn-success">Download Session JSON</button>
+      <div class="control-row" style="margin-top: 1.5rem; justify-content: flex-end; gap: 0.5rem;">
+        <button id="btn-modal-view-report" class="btn btn-primary">View Report</button>
+        <button id="btn-save-session" class="btn btn-success">Download JSON</button>
         <button id="btn-close-modal" class="btn btn-secondary">Close</button>
       </div>
     </div>

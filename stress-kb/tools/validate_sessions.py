@@ -87,7 +87,7 @@ def validate_session(file_path: str) -> Tuple[bool, List[str], Dict[str, Any]]:
         'total_events': len(data.get('events', [])),
         'total_windows': len(data.get('windows', [])),
         'valid_windows': sum(1 for w in data.get('windows', []) if w.get('valid') == 1),
-        'self_stress': data.get('selfreport', {}).get('stress', None),
+        'self_stress': (data.get('selfreport') or {}).get('stress', None),
         'synthetic': data.get('synthetic', False)
     }
 
@@ -108,7 +108,7 @@ def validate_session(file_path: str) -> Tuple[bool, List[str], Dict[str, Any]]:
             break
 
     # 5. Label and selfreport check
-    sr = data.get('selfreport', {})
+    sr = data.get('selfreport') or {}
     if mode == 'RUN':
         if sr.get('stress') not in (1, 2, 3, 4, 5):
             errors.append(f"Invalid selfreport stress score: {sr.get('stress')}")
