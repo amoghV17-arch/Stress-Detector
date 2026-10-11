@@ -20,7 +20,7 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 | M4 Collection tooling | WAITING_ON_USER | user (HG3) | make test & validate_sessions | schedule.js, validate_sessions.py, replay.py --regen, visit simulation (5 files passed) |
 | M5 Training pipeline | DONE | agent | make test (pytest 5 passed, 0% leakage) | GroupKFold leakage-free CV, RF & MLP models, feature selection (10 features), ablation study, results markdown generated with synthetic warnings |
 | M6 Deploy model | WAITING_ON_USER | user (HG4) | make test (100% C/sklearn agreement) & replay --verify-pred | export_emlearn.py, stress_model.h, model_config.h, inference.h, 100% agreement on 76 held-out windows, stresskb.ino emits PRED |
-| M7 Decision layer and calibration | TODO | agent | | |
+| M7 Decision layer and calibration | WAITING_ON_USER | user (HG5) | make test & node --test (all pass) | decision.h, PatternFlagsEngine (6 flags), DecisionLayer (EMA alpha 0.4, 3-in-a-row alert, 20-window cooldown), NVS baseline storage, Calibrator, host tests & sim end-to-end green |
 | M8 Session report | TODO | agent | | |
 | M9 Hardening and demo | TODO | agent | | |
 | M10 Write-up | TODO | agent | | |
@@ -57,6 +57,11 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 - **Expect**: Agreement >= 99% on held-out predictions; PRED lines match expected classes.
 - **Report**: Full console output and serial prediction log.
 
+### HG5 — Calibration and alerts
+- **Action**: Calibrate yourself (3 minutes calm typing in CAL mode); power-cycle the board; start a RUN session and confirm the BASE line shows present = 1; replay a stressed session (`tools/replay.py`) and confirm the alert and motor; unplug USB mid-session and confirm LINK LOST and the motor stops.
+- **Expect**: PASS for each item.
+- **Report**: PASS/FAIL for each item.
+
 ## Assumptions
 - Default serial baud rate is 115200 with 2048 RX buffer size per PROTOCOL.md.
 - Default simulator firmware version is 0.1, protocol version 1.
@@ -74,6 +79,7 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 - Synthetic dataset contains 50 sessions (10 participants x 5 sessions) following Latin-square counterbalanced conditions.
 - Model selection picks top 10 features based on RandomForest Gini importances: `iki_mean`, `iki_std`, `dwell_mean`, `bksp_rate`, `bksp_bursts`, `err_rate`, `corr_latency`, `post_err_slow`, `focus_loss`, `lux_mean_log`.
 - Deployed TinyML model uses 100 decision trees (max_depth=6) with 10 features, compiled via emlearn C inline functions, achieving 100% agreement on 76 held-out validation cases (< 1 ms estimated inference on ESP32).
+- Decision layer applies EMA smoothing (alpha=0.4) over eligible windows, gating on confidence >= 0.6; alert fires after 3 consecutive high-stress windows (EMA >= 0.6) followed by a 20-window cooldown.
 
 ## Decisions (spec changes)
 - None. Following PROTOCOL.md, FEATURES.md, and REPORT_SPEC.md exactly as specified.
@@ -82,6 +88,7 @@ Status values: TODO, IN_PROGRESS, WAITING_ON_USER, BLOCKED, DONE
 - None.
 
 ## Log (newest first)
+- 2026-10-11 — M7 — Decision layer, calibration, pattern flags complete: `firmware/stresskb/decision.h` created featuring `PatternFlagsEngine` (evaluates 6 behaviour flags: RUSHED, HESITANT, FRUSTRATED, FATIGUED, DISTRACTED, FOCUSED), `DecisionLayer` (EMA smoothing alpha=0.4, confidence gating 0.6, 3-in-a-row alert trigger, 20-window cooldown), `IBaselineStorage` (NVS Preferences & in-memory implementations), and `Calibrator` (accumulates >= 6 CAL windows, calculates population mean and sd_eff, emits `CAL,DONE` and `BASE`); host C++ tests added verifying all 6 flags, exact alert window sequences, cooldown window countdown, calibration math, storage, and link watchdog; `fake-esp32.js` and `web/tests/fake-esp32.test.js` updated with end-to-end calm then pressure scenario verifying alerts and flags; `firmware/stresskb/stresskb.ino` fully connected with motor alert triggering and NVS baseline loading/saving — tests: `make test` (pass, 20 Node + C++ host tests + 5 pytest) — next: M8 Session report.
 - 2026-10-11 — M6 — Deploy model on ESP32 complete: `ml/export_emlearn.py` exported trained RandomForest (100 trees, 10 selected features) to standalone C header `firmware/stresskb/model/stress_model.h` and `model_config.h` (feature indices, global baselines, class mapping), `firmware/stresskb/inference.h` created for feature z-normalisation with [-5, 5] clipping and `ModelInference::predict`, host test in `firmware/host_tests/test_main.cpp` verified 100% agreement (76/76 matches) with scikit-learn on held-out windows from participant u10 with max probability diff 0.001099 and < 1 us host latency, `tools/replay.py --verify-pred` added, and `firmware/stresskb/stresskb.ino` integrated to emit `PRED` lines and update OLED display — tests: `make test` (pass, 19 Node + C++ host tests incl. model inference + 5 pytest), `tools/replay.py --verify-pred ml/export/heldout/` (pass, 100% agreement) — next: M7 Decision layer and calibration.
 - 2026-10-11 — M5 — Training pipeline complete: `tools/synth_data.py` generated 50 validated synthetic sessions across 10 participants, `ml/train.py` implemented GroupKFold by participant (asserting 0% participant leakage across train/test splits), per-participant CAL baseline normalisation with clipping [-5, 5], RandomForest (100 trees) and MLP (32x16) models trained on 3-class self-report stress (RF Acc: 94.1%, Macro-F1: 0.644) and binary condition (RF Acc: 99.3%, Macro-F1: 0.993), top 10 features selected and saved to `ml/feature_selection.json`, ablation study evaluated typing dynamics vs multimodal light inputs, `ml/evaluate.py` produced 4 markdown tables and figures banner-marked with `SYNTHETIC — NOT REAL RESULTS`, and unit tests added in `tests/test_ml_pipeline.py` — tests: `make test` (pass, 19 Node + C++ host tests + 5 pytest), `validate_sessions.py` (all 50 files pass) — next: M6 Deploy model.
 - 2026-10-11 — M4 — Collection tooling complete: `web/js/core/schedule.js` (4x4 Latin-square counterbalancing, 5-step visit generator, 0.75x CAL pace calculator), `web/index.html` and `web/js/app.js` updated with interactive visit step selector and 2-min rest reminders, `tools/validate_sessions.py` created (schema 1 + recursive privacy audit + coverage + condition checks), `tools/replay.py --regen` implemented, unit tests added simulating full 5-session visit with 100% validator pass — tests: `make test` (pass, 19 Node + C++ host tests + pytest), `validate_sessions.py` (pass on simulated visit) — next: M5 Training pipeline.

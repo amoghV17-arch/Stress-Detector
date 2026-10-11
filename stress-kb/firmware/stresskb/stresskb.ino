@@ -10,6 +10,7 @@
 #include "ui.h"
 #include "motor.h"
 #include "inference.h"
+#include "decision.h"
 
 using namespace stresskb;
 
@@ -17,6 +18,18 @@ using namespace stresskb;
 LightSensor lightSensor;
 DisplayController display;
 MotorController motor;
+
+// Decision layer, calibration, and baseline storage
+DecisionLayer decisionLayer;
+Calibrator calibrator;
+#ifdef ARDUINO
+NVSBaselineStorage baselineStorage;
+#else
+InMemoryBaselineStorage baselineStorage;
+#endif
+float currentUserMu[18];
+float currentUserSdEff[18];
+bool hasUserBaseline = false;
 
 // Line receive buffer
 char rxLineBuffer[MAX_LINE_LEN + 8];
@@ -78,13 +91,24 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
     }
     Serial.println();
 
-    if (strcmp(currentMode, "CAL") == 0 && wf.valid) {
-        currentCalWindows++;
-        displayData.calWindows = currentCalWindows;
+    if (strcmp(currentMode, "CAL") == 0) {
+        if (wf.valid) {
+            calibrator.addWindow(wf);
+            currentCalWindows = calibrator.getValidCount();
+            displayData.calWindows = currentCalWindows;
+        }
         displayData.screen = ScreenType::CAL;
     } else if (strcmp(currentMode, "RUN") == 0 || strcmp(currentMode, "REPLAY") == 0) {
-        // Run TinyML model inference per M6
-        auto inf = ModelInference::predict(wf, nullptr, nullptr, false);
+        // Run TinyML model inference
+        auto inf = ModelInference::predict(wf, currentUserMu, currentUserSdEff, hasUserBaseline);
+
+        // Update decision layer (EMA, pattern flags, cooldown, alerts)
+        auto dec = decisionLayer.update(wf, inf);
+
+        // Trigger motor vibration alert on alert condition
+        if (dec.alert) {
+            motor.trigger(MotorPattern::DOUBLE);
+        }
 
         // Emit PRED line per PROTOCOL.md:
         // PRED,<win_id>,<cls>,<p_low>,<p_med>,<p_high>,<flags>,<alert>,<state>
@@ -98,7 +122,11 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
         Serial.print(inf.p[1], 2);
         Serial.print(",");
         Serial.print(inf.p[2], 2);
-        Serial.print(",0,0,"); // flags=0, alert=0 (decision layer in M7)
+        Serial.print(",");
+        Serial.print(dec.flags);
+        Serial.print(",");
+        Serial.print(dec.alert);
+        Serial.print(",");
         Serial.println(inf.state);
 
         if (!wf.valid) {
@@ -110,6 +138,7 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
             else if (inf.cls == 1) displayData.level = StressLevel::MEDIUM;
             else displayData.level = StressLevel::HIGH;
             displayData.confidence = std::max(inf.p[0], std::max(inf.p[1], inf.p[2]));
+            displayData.topFlag = dec.flags;
         }
     }
     display.render(displayData);
@@ -281,13 +310,25 @@ void loop() {
                             display.render(displayData);
 
                             Serial.println("ACK,S");
-                            if (strcmp(currentMode, "RUN") == 0) {
-                                // Default model baseline (present = 0)
+                            if (strcmp(currentMode, "CAL") == 0) {
+                                calibrator.reset();
+                                decisionLayer.reset();
+                            } else {
+                                decisionLayer.reset();
+                                hasUserBaseline = baselineStorage.loadBaseline(currentUserId, currentUserMu, currentUserSdEff);
                                 Serial.print("BASE,");
                                 Serial.print(currentUserId);
-                                Serial.print(",0");
-                                for (int i = 0; i < 36; i++) {
-                                    Serial.print(",0.000");
+                                Serial.print(",");
+                                Serial.print(hasUserBaseline ? 1 : 0);
+                                const float* bMu = hasUserBaseline ? currentUserMu : MODEL_ALL_GLOBAL_MU;
+                                const float* bSd = hasUserBaseline ? currentUserSdEff : MODEL_ALL_GLOBAL_SD_EFF;
+                                for (int i = 0; i < 18; i++) {
+                                    Serial.print(",");
+                                    Serial.print(bMu[i], 3);
+                                }
+                                for (int i = 0; i < 18; i++) {
+                                    Serial.print(",");
+                                    Serial.print(bSd[i], 3);
                                 }
                                 Serial.println();
                             }
@@ -298,12 +339,27 @@ void loop() {
                             motor.stop();
                             Serial.println("ACK,S");
                             if (strcmp(currentMode, "CAL") == 0) {
-                                if (currentCalWindows >= 6) {
+                                if (calibrator.computeBaseline(currentUserMu, currentUserSdEff)) {
+                                    baselineStorage.saveBaseline(currentUserId, currentUserMu, currentUserSdEff);
+                                    hasUserBaseline = true;
                                     Serial.print("CAL,DONE,");
-                                    Serial.println(currentCalWindows);
+                                    Serial.println(calibrator.getValidCount());
+                                    // Emit BASE line
+                                    Serial.print("BASE,");
+                                    Serial.print(currentUserId);
+                                    Serial.print(",1");
+                                    for (int i = 0; i < 18; i++) {
+                                        Serial.print(",");
+                                        Serial.print(currentUserMu[i], 3);
+                                    }
+                                    for (int i = 0; i < 18; i++) {
+                                        Serial.print(",");
+                                        Serial.print(currentUserSdEff[i], 3);
+                                    }
+                                    Serial.println();
                                 } else {
                                     Serial.print("WARN,CAL_TOO_SHORT,");
-                                    Serial.println(currentCalWindows);
+                                    Serial.println(calibrator.getValidCount());
                                 }
                             }
                             displayData.screen = ScreenType::MAIN;

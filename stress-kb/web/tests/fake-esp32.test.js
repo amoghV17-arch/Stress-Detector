@@ -83,4 +83,64 @@ describe('FakeESP32', () => {
     sim.receive('T,5500');
     assert.ok(emitted.some(l => l.startsWith('WARN,LINK_OK')));
   });
+
+  test('end-to-end scenario (calm then pressure) produces expected alerts and flags', () => {
+    const emitted = [];
+    const sim = new FakeESP32({
+      onLine: (line) => emitted.push(line)
+    });
+
+    sim.receive('S,START,sess02,u01,RUN');
+
+    let seq = 1;
+    let t = 0;
+
+    // 1. Send 2 calm windows (t up to ~60 000 ms)
+    for (let w = 0; w < 2; w++) {
+      for (let k = 0; k < 30; k++) {
+        t += 800;
+        sim.receive(`K,${seq++},${t},70,L,0`);
+      }
+      t += 5000;
+      sim.receive(`T,${t}`);
+    }
+
+    let predLines = emitted.filter(l => l.startsWith('PRED'));
+    assert.ok(predLines.length >= 2, 'Should emit PRED lines for closed calm windows');
+    for (const pl of predLines) {
+      const parts = pl.split(',');
+      const alert = parseInt(parts[7], 10);
+      assert.equal(alert, 0, 'No alert should fire in calm typing');
+    }
+
+    // 2. Send sustained pressure windows (rapid typing, high errors, backspaces)
+    // Needs 3 consecutive windows with EMA >= 0.6 to fire alert
+    for (let w = 0; w < 6; w++) {
+      for (let k = 0; k < 80; k++) {
+        t += 180;
+        const err = (k % 2 === 0) ? 1 : 0;
+        const cls = (k % 8 < 3) ? 'B' : 'L'; // runs of 3 consecutive backspaces
+        sim.receive(`K,${seq++},${t},150,${cls},${err}`);
+      }
+      t += 1000;
+      sim.receive(`T,${t}`);
+    }
+
+    sim.receive('S,STOP');
+
+    predLines = emitted.filter(l => l.startsWith('PRED'));
+    assert.ok(predLines.length >= 5, 'Should emit multiple PRED windows across session');
+
+    const flagsFired = predLines.some(l => {
+      const parts = l.split(',');
+      return parseInt(parts[6], 10) > 0;
+    });
+    const alertsFired = predLines.some(l => {
+      const parts = l.split(',');
+      return parseInt(parts[7], 10) === 1;
+    });
+
+    assert.ok(flagsFired, 'Behaviour pattern flags should be evaluated and detected');
+    assert.ok(alertsFired, 'Alert should trigger under sustained high stress pressure');
+  });
 });

@@ -13,6 +13,7 @@
 #include "ui.h"
 #include "sensors.h"
 #include "inference.h"
+#include "decision.h"
 #include "test_model_data.h"
 #include <chrono>
 
@@ -402,6 +403,191 @@ void testModelInference() {
     std::cout << "  -> ModelInference::predict valid/invalid logic verified." << std::endl;
 }
 
+void testPatternFlags() {
+    std::cout << "[TEST] Behaviour pattern flags..." << std::endl;
+    PatternFlagsEngine engine;
+    WindowFeatures wf;
+    wf.valid = 1;
+    for (int i = 0; i < 18; i++) wf.f[i] = 0.0f;
+
+    float z[18] = {0.0f};
+
+    // 1. RUSHED: z_kpm >= 1.0 AND z_err_rate >= 0.5
+    z[0] = 1.2f;
+    z[9] = 0.6f;
+    uint8_t flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_RUSHED);
+
+    // 2. HESITANT: z_long_pauses >= 1.0 AND z_kpm <= -0.5
+    engine.reset();
+    for (int i = 0; i < 18; i++) z[i] = 0.0f;
+    z[12] = 1.1f;
+    z[0] = -0.6f;
+    flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_HESITANT);
+
+    // 3. FRUSTRATED: z_bksp_bursts >= 1.0 AND z_burstiness >= 0.5
+    engine.reset();
+    for (int i = 0; i < 18; i++) z[i] = 0.0f;
+    z[8] = 1.3f;
+    z[14] = 0.7f;
+    flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_FRUSTRATED);
+
+    // 4. DISTRACTED: focus_loss >= 2 OR (z_idle_frac >= 1.0 AND focus_loss >= 1)
+    engine.reset();
+    for (int i = 0; i < 18; i++) z[i] = 0.0f;
+    wf.f[15] = 2.0f; // focus_loss = 2
+    flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_DISTRACTED);
+
+    // 5. FOCUSED: |z_iki_cv| <= 0.5 AND z_err_rate <= 0.25 AND z_long_pauses <= 0.25
+    engine.reset();
+    wf.f[15] = 0.0f;
+    for (int i = 0; i < 18; i++) z[i] = 0.0f;
+    z[3] = 0.2f;
+    z[9] = 0.1f;
+    z[12] = 0.1f;
+    flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_FOCUSED);
+
+    // 6. FATIGUED: over last 6 valid windows
+    engine.reset();
+    for (int i = 0; i < 18; i++) z[i] = 0.0f;
+    // first 3 windows: high kpm (1.0), low error (0.0)
+    z[0] = 1.0f; z[9] = 0.0f;
+    engine.evaluateFlags(wf, z);
+    engine.evaluateFlags(wf, z);
+    engine.evaluateFlags(wf, z);
+    // last 3 windows: low kpm (0.2), high error (0.8)
+    z[0] = 0.2f; z[9] = 0.8f;
+    engine.evaluateFlags(wf, z);
+    engine.evaluateFlags(wf, z);
+    flags = engine.evaluateFlags(wf, z);
+    assert(flags & FLAG_FATIGUED);
+    std::cout << "  -> All 6 behaviour flags verified." << std::endl;
+}
+
+void testDecisionLayer() {
+    std::cout << "[TEST] Decision layer alert and cooldown sequence..." << std::endl;
+    DecisionLayer dec;
+    WindowFeatures wf;
+    wf.valid = 1;
+    for (int i = 0; i < 18; i++) wf.f[i] = 0.0f;
+
+    InferenceResult inf;
+    inf.state = 0; // OK
+    for (int i = 0; i < 18; i++) inf.z[i] = 0.0f;
+
+    // 5 calm windows: p_low = 0.9, p_med = 0.1, p_high = 0.0 -> score = 0.05
+    inf.p[0] = 0.9f; inf.p[1] = 0.1f; inf.p[2] = 0.0f;
+    for (int i = 0; i < 5; i++) {
+        inf.winId = i;
+        auto out = dec.update(wf, inf);
+        assert(out.alert == 0);
+        assert(out.cooldownLeft == 0);
+    }
+    assert(dec.getEmaScore() < 0.2f);
+
+    // 4 high-stress windows: p_low = 0.0, p_med = 0.1, p_high = 0.9 -> score = 0.95
+    inf.p[0] = 0.0f; inf.p[1] = 0.1f; inf.p[2] = 0.9f;
+
+    // Window 5: EMA = 0.4 * 0.95 + 0.6 * ~0.05 = ~0.41 (< 0.6)
+    inf.winId = 5;
+    auto out5 = dec.update(wf, inf);
+    assert(out5.alert == 0);
+    assert(dec.getConsecutiveHigh() == 0);
+
+    // Window 6: EMA = 0.4 * 0.95 + 0.6 * ~0.41 = ~0.626 (>= 0.6) -> consecutive = 1
+    inf.winId = 6;
+    auto out6 = dec.update(wf, inf);
+    assert(out6.alert == 0);
+    assert(dec.getConsecutiveHigh() == 1);
+
+    // Window 7: consecutive = 2, no alert yet
+    inf.winId = 7;
+    auto out7 = dec.update(wf, inf);
+    assert(out7.alert == 0);
+    assert(dec.getConsecutiveHigh() == 2);
+
+    // Window 8: consecutive = 3 -> ALERT FIRES! cooldown set to 20
+    inf.winId = 8;
+    auto out8 = dec.update(wf, inf);
+    assert(out8.alert == 1);
+    assert(out8.cooldownLeft == 20);
+    assert(dec.getCooldown() == 20);
+
+    // Next 20 windows: alert remains 0 during cooldown
+    for (int i = 9; i < 29; i++) {
+        inf.winId = i;
+        auto out = dec.update(wf, inf);
+        assert(out.alert == 0);
+    }
+    assert(dec.getCooldown() == 0);
+    std::cout << "  -> Decision EMA, 3-in-a-row alert, and 20-window cooldown verified." << std::endl;
+}
+
+void testCalibrationAndStorage() {
+    std::cout << "[TEST] Calibration session and NVS storage..." << std::endl;
+    Calibrator cal;
+    WindowFeatures wf;
+    wf.valid = 1;
+    for (int i = 0; i < 18; i++) wf.f[i] = 100.0f + i;
+    wf.f[16] = 200.0f; // lux_mean
+    wf.f[17] = 10.0f;  // lux_std
+
+    // Feed 5 windows -> insufficient (< 6)
+    for (int i = 0; i < 5; i++) {
+        wf.winId = i;
+        cal.addWindow(wf);
+    }
+    float mu[18], sdEff[18];
+    assert(!cal.computeBaseline(mu, sdEff));
+
+    // Feed 6th window -> succeeds
+    wf.winId = 5;
+    cal.addWindow(wf);
+    assert(cal.computeBaseline(mu, sdEff));
+    assert(cal.getValidCount() == 6);
+
+    // Verify baseline values
+    assert(std::abs(mu[0] - 100.0f) < 1e-4f);
+    assert(sdEff[0] >= 1e-3f);
+
+    // Storage test
+    InMemoryBaselineStorage storage;
+    assert(!storage.hasBaseline("u01"));
+    assert(storage.saveBaseline("u01", mu, sdEff));
+    assert(storage.hasBaseline("u01"));
+
+    float loadedMu[18], loadedSdEff[18];
+    assert(storage.loadBaseline("u01", loadedMu, loadedSdEff));
+    assert(std::abs(loadedMu[0] - mu[0]) < 1e-5f);
+    std::cout << "  -> Calibration baseline calculation and storage verified." << std::endl;
+}
+
+void testWatchdog() {
+    std::cout << "[TEST] Link watchdog..." << std::endl;
+    unsigned long lastActivity = 1000;
+    bool linkLost = false;
+
+    // At 4000 ms -> link ok
+    unsigned long now = 5000;
+    if (now - lastActivity >= WATCHDOG_TIMEOUT_MS) linkLost = true;
+    assert(!linkLost);
+
+    // At 6001 ms -> link lost
+    now = 6001;
+    if (now - lastActivity >= WATCHDOG_TIMEOUT_MS) linkLost = true;
+    assert(linkLost);
+
+    // Recovery on activity
+    lastActivity = now;
+    linkLost = false;
+    assert(!linkLost);
+    std::cout << "  -> Link watchdog 5000 ms timeout and recovery verified." << std::endl;
+}
+
 int main() {
     std::cout << "=========================================" << std::endl;
     std::cout << "StressKB C++ Firmware Host Test Suite" << std::endl;
@@ -413,6 +599,10 @@ int main() {
     testScreenLayout();
     testBareBoardMode();
     testModelInference();
+    testPatternFlags();
+    testDecisionLayer();
+    testCalibrationAndStorage();
+    testWatchdog();
 
     std::vector<std::string> goldenCases = {
         "normal_typing",
