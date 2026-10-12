@@ -13,8 +13,8 @@ export class FakeESP32 {
     this.watchdogTimer = null;
     this.linkLost = false;
     this.nowFn = options.nowFn ?? (() => Date.now());
-    this.setTimeoutFn = options.setTimeoutFn ?? setTimeout;
-    this.clearTimeoutFn = options.clearTimeoutFn ?? clearTimeout;
+    this.setTimeoutFn = options.setTimeoutFn ?? ((fn, ms) => setTimeout(fn, ms));
+    this.clearTimeoutFn = options.clearTimeoutFn ?? ((id) => clearTimeout(id));
 
     // Default global baseline for state 3 (NO_BASELINE)
     this.defaultBaseline = {
@@ -537,8 +537,10 @@ export class FakeESP32 {
 
     this.onLine = (line) => {
       if (isOpen && inputController) {
-        const encoder = new TextEncoder();
-        inputController.enqueue(encoder.encode(line + '\n'));
+        try {
+          const encoder = new TextEncoder();
+          inputController.enqueue(encoder.encode(line + '\n'));
+        } catch (_) {}
       }
     };
 
@@ -564,6 +566,9 @@ export class FakeESP32 {
       close: async () => {
         isOpen = false;
         this.clearWatchdog();
+        try {
+          if (inputController) inputController.close();
+        } catch (_) {}
       },
       readable,
       writable

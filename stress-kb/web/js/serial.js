@@ -78,6 +78,7 @@ export class SerialManager {
       this.onStatusChange('DISCONNECTED', `Failed: ${err.message}`);
       this.onError(err);
       await this.disconnect();
+      throw err;
     }
   }
 

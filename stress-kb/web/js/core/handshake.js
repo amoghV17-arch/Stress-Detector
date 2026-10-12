@@ -12,8 +12,8 @@ export class HandshakeController {
     this.onSuccess = options.onSuccess ?? (() => {});
     this.onFailure = options.onFailure ?? (() => {});
     this.nowFn = options.nowFn ?? (() => Date.now());
-    this.setTimeoutFn = options.setTimeoutFn ?? setTimeout;
-    this.clearTimeoutFn = options.clearTimeoutFn ?? clearTimeout;
+    this.setTimeoutFn = options.setTimeoutFn ?? ((fn, ms) => setTimeout(fn, ms));
+    this.clearTimeoutFn = options.clearTimeoutFn ?? ((id) => clearTimeout(id));
 
     this.timer = null;
     this.timeoutTimer = null;
