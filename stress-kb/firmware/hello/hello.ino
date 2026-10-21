@@ -30,6 +30,7 @@ void setup() {
   Serial.print(FW_VER);
   Serial.print(",");
   Serial.println(PROTO_VER);
+  Serial.flush();
 }
 
 void loop() {
@@ -48,16 +49,19 @@ void loop() {
     if (c == '\n') {
       rxBuffer.trim();
       if (rxBuffer.length() > 0) {
-        if (rxBuffer == "HELLO,1") {
+        if (rxBuffer == "HELLO,1" || rxBuffer.indexOf("HELLO,1") >= 0) {
           Serial.print("READY,");
           Serial.print(FW_VER);
           Serial.print(",");
           Serial.println(PROTO_VER);
-        } else if (rxBuffer.startsWith("HELLO")) {
+          Serial.flush();
+        } else if (rxBuffer.indexOf("HELLO") >= 0) {
           Serial.println("WARN,MALFORMED,HELLO");
+          Serial.flush();
         } else {
           Serial.print("WARN,UNKNOWN_CMD,");
           Serial.println(rxBuffer);
+          Serial.flush();
         }
       }
       rxBuffer = "";

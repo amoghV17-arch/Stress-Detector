@@ -563,6 +563,7 @@ export class FakeESP32 {
         isOpen = true;
         this.boot();
       },
+      setSignals: async () => {},
       close: async () => {
         isOpen = false;
         this.clearWatchdog();

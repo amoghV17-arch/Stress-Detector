@@ -56,14 +56,14 @@ export class HandshakeController {
     const trimmed = (line || '').trim();
     if (!trimmed) return false;
 
-    // Line format: READY,<fw_ver>,1
-    const parts = trimmed.split(',');
-    if (parts[0] === 'READY' && parts.length >= 3) {
+    // Line format: READY,<fw_ver>,1 (tolerate leading/trailing noise)
+    const match = trimmed.match(/READY,([0-9.]+),([0-9]+)/);
+    if (match) {
       this.completed = true;
       this.cancel();
       const info = {
-        version: parts[1],
-        protocol: parseInt(parts[2], 10) || 1,
+        version: match[1],
+        protocol: parseInt(match[2], 10) || 1,
         raw: trimmed
       };
       this.onSuccess(info);

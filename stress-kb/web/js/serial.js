@@ -36,6 +36,20 @@ export class SerialManager {
         }
         this.port = await navigator.serial.requestPort();
         await this.port.open({ baudRate: 115200 });
+
+        // Hardware control lines (DTR/RTS):
+        // Standard ESP32 dev boards connect DTR/RTS to EN (reset) and GPIO0 (bootloader).
+        // Setting DTR=true and RTS=false ensures EN=HIGH and GPIO0=HIGH (normal execution mode).
+        // We pulse RTS to ensure the chip resets cleanly into application code.
+        if (this.port && typeof this.port.setSignals === 'function') {
+          try {
+            await this.port.setSignals({ dataTerminalReady: false, requestToSend: true });
+            await new Promise(r => setTimeout(r, 100));
+            await this.port.setSignals({ dataTerminalReady: true, requestToSend: false });
+          } catch (e) {
+            console.warn('Could not set control signals:', e);
+          }
+        }
       }
 
       // Set up writer
@@ -51,11 +65,11 @@ export class SerialManager {
       // Read loop in background
       this.startReadLoop();
 
-      // Run HandshakeController
+      // Run HandshakeController (10s timeout to allow boot/reset)
       await new Promise((resolve, reject) => {
         this.handshake = new HandshakeController({
           retryIntervalMs: 500,
-          maxTimeoutMs: 5000,
+          maxTimeoutMs: 10000,
           sendFn: (msg) => this.sendLine(msg),
           onSuccess: (info) => {
             this.isConnected = true;
@@ -75,7 +89,11 @@ export class SerialManager {
     } catch (err) {
       this.isConnecting = false;
       this.isConnected = false;
-      this.onStatusChange('DISCONNECTED', `Failed: ${err.message}`);
+      const isTimeout = err.message && err.message.includes('timeout');
+      const msg = isTimeout
+        ? `${err.message}. If using a real ESP32: press the physical EN/RST button on the board, check the COM port, and verify hello.ino is uploaded.`
+        : `Failed: ${err.message}`;
+      this.onStatusChange('DISCONNECTED', msg);
       this.onError(err);
       await this.disconnect();
       throw err;
