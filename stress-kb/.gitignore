@@ -29,3 +29,10 @@ Thumbs.db
 
 # Test output directories
 tests/output_visit/
+
+# Node and Next.js
+node_modules/
+.next/
+web-next/node_modules/
+web-next/.next/
+web-next/out/

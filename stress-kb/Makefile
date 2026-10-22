@@ -1,4 +1,4 @@
-.PHONY: all serve test compile synth clean
+.PHONY: all serve test compile synth clean serve-next build-next test-next
 
 ifeq ($(OS),Windows_NT)
   PYTHON ?= $(if $(wildcard .venv/Scripts/python.exe),.venv/Scripts/python.exe,python)
@@ -26,3 +26,12 @@ synth:
 
 clean:
 	$(MAKE) -C firmware/host_tests clean
+
+serve-next:
+	npm --prefix web-next run dev
+
+build-next:
+	npm --prefix web-next run build
+
+test-next:
+	npm --prefix web-next run build

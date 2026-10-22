@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@core/*": ["../web/js/core/*"],
+      "@/*": ["./src/*"]
+    }
+  }
+}

@@ -1,0 +1,33 @@
+/**
+ * StressKB Design System Tokens
+ * Paper, ink, grid, and calibrated stress indicators.
+ */
+:root {
+  /* Surface & Base Canvas */
+  --color-paper: #E4EBE7;
+  --color-grid: #B9C7C1;
+  --color-ink: #10272B;
+  --color-ink-muted: #4B6360;
+  --color-ink-faint: #809690;
+  --color-surface-translucent: rgba(228, 235, 231, 0.85);
+
+  /* Stress Classification Levels */
+  --color-level-low: #1F6F6A;     /* Muted teal */
+  --color-level-med: #D99A1E;     /* Ochre amber */
+  --color-level-high: #D8432B;    /* Rust red - used for traces, chips, and large type */
+
+  /* Structural Geometry & Instrument Rules */
+  --radius-instrument: 1px;
+  --border-rule: 1px solid var(--color-grid);
+  --border-ink: 1px solid var(--color-ink);
+
+  /* Graph Paper Background (16px x 16px faint laboratory grid) */
+  --grid-pattern: linear-gradient(to right, var(--color-grid) 1px, transparent 1px),
+                  linear-gradient(to bottom, var(--color-grid) 1px, transparent 1px);
+  --grid-size: 16px 16px;
+
+  /* Typography Stacks */
+  --font-sans: var(--font-archivo), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-serif: var(--font-source-serif), "Times New Roman", Georgia, serif;
+  --font-mono: "SF Mono", "Consolas", "Courier New", monospace;
+}
