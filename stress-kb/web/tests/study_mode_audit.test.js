@@ -88,3 +88,4 @@ describe('U2 Study Mode & Privacy Audit', () => {
     assert.equal(JSON.stringify(sessionJSON).includes('Test phrase'), false);
   });
 });
+

@@ -45,6 +45,12 @@ export default function DeviceDiagnosticsPage() {
       {/* Top Header */}
       <header className={styles.topBar}>
         <div className={styles.titleArea}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', marginBottom: '4px' }}>
+            <Link href="/" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 600 }}>
+              StressKB
+            </Link>{' '}
+            &rarr; <span style={{ color: 'var(--color-ink-muted)' }}>Device &amp; Diagnostics</span>
+          </div>
           <h1 className={styles.pageTitle}>Device Status &amp; Diagnostics</h1>
           <p className={styles.pageSubtitle}>
             Hardware connection telemetry, real-time OLED mirror, and serial paper tape console.
@@ -195,3 +201,4 @@ export default function DeviceDiagnosticsPage() {
     </main>
   );
 }
+

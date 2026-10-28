@@ -71,3 +71,4 @@ describe('Time Series Derivation Helper', () => {
     assert.equal(res.light.length, 0);
   });
 });
+

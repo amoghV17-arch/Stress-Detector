@@ -52,3 +52,4 @@ describe('U6 Demo Mode, Canvas Tape & OLED Mirror', () => {
     assert.ok(demoCss.includes('animation: none'));
   });
 });
+

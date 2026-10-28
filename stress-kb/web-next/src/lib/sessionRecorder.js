@@ -26,8 +26,9 @@ export class SessionRecorder {
     this.onWarning = options.onWarning || (() => {});
 
     this.calBaselinePace = options.calBaselinePace || { chars: 0, durationS: 180 };
-    this.sessionDurationSeconds = 300;
-    this.remainingSeconds = 300;
+    this.customDurationSeconds = options.durationSeconds || null;
+    this.sessionDurationSeconds = options.durationSeconds || 300;
+    this.remainingSeconds = this.sessionDurationSeconds;
     this.liveScore = 0;
     this.isActive = false;
 
@@ -79,8 +80,10 @@ export class SessionRecorder {
     if (this.isActive) return;
     this.isActive = true;
 
-    // Determine session duration per protocol
-    if (this.mode === 'CAL') {
+    // Determine session duration per protocol or user selection
+    if (this.customDurationSeconds && this.customDurationSeconds > 0) {
+      this.sessionDurationSeconds = this.customDurationSeconds;
+    } else if (this.mode === 'CAL') {
       this.sessionDurationSeconds = 180;
     } else {
       if (this.condition === 'pressure') {

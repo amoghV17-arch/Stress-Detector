@@ -135,6 +135,16 @@ export default function ReportPage() {
       {/* Top Header & Actions */}
       <header className={styles.topBar}>
         <div className={styles.reportMeta}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', marginBottom: '4px' }} className={styles.noPrint}>
+            <Link href="/" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 600 }}>
+              StressKB
+            </Link>{' '}
+            &rarr;{' '}
+            <Link href="/sessions" style={{ color: 'var(--color-ink)', textDecoration: 'none' }}>
+              Archives
+            </Link>{' '}
+            &rarr; <span style={{ color: 'var(--color-ink-muted)' }}>Stress Report</span>
+          </div>
           <div className={styles.reportTitle}>
             <span>Stress Report</span>
             <span style={{ fontSize: '13px', fontWeight: 400, color: 'var(--color-ink-muted)' }}>
@@ -148,7 +158,10 @@ export default function ReportPage() {
 
         <div className={`${styles.actionsGroup} ${styles.noPrint}`}>
           <Link href="/session" className={styles.btnAction}>
-            &larr; Operator Setup
+            &larr; Setup Session
+          </Link>
+          <Link href="/demo" className={styles.btnAction}>
+            Live Demo
           </Link>
           <button className={styles.btnAction} onClick={() => fileInputRef.current?.click()}>
             Load JSON

@@ -10,6 +10,12 @@ export default function MethodPage() {
       {/* Top Header */}
       <header className={styles.topBar}>
         <div className={styles.titleArea}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', marginBottom: '4px' }}>
+            <Link href="/" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 600 }}>
+              StressKB
+            </Link>{' '}
+            &rarr; <span style={{ color: 'var(--color-ink-muted)' }}>Methodology &amp; Biometrics</span>
+          </div>
           <h1 className={styles.pageTitle}>Methodology &amp; Scope</h1>
           <p className={styles.pageSubtitle}>
             How StressKB works, ethical considerations, stated limitations, and architectural boundaries.
@@ -120,3 +126,4 @@ export default function MethodPage() {
     </main>
   );
 }
+

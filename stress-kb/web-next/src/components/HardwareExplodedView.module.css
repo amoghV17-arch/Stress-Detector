@@ -1,0 +1,213 @@
+.explodedSection {
+  width: 100%;
+  padding: 80px 48px;
+  background-color: var(--color-paper);
+  border-bottom: var(--border-rule);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .explodedSection {
+    padding: 48px 20px;
+  }
+}
+
+.header {
+  max-width: 900px;
+  margin: 0 auto 40px auto;
+  text-align: center;
+}
+
+.sectionTag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-muted);
+  margin-bottom: 8px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-bottom: 12px;
+}
+
+.subtitle {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Scrub & Control Bar */
+.controlBar {
+  max-width: 600px;
+  margin: 0 auto 36px auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  padding: 10px 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.sliderLabel {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+}
+
+.scrubSlider {
+  flex: 1;
+  height: 6px;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.btnControl {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  padding: 5px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.btnControl:hover {
+  background-color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.btnActive {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+/* Exploded Stage Grid: Diagram on left/center, Callout Cards on right */
+.stageGrid {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+@media (max-width: 900px) {
+  .stageGrid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+.svgContainer {
+  width: 100%;
+  min-height: 520px;
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.svgStage {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  overflow: visible;
+}
+
+/* Part Cards List */
+.partsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.partCard {
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.partCard:hover {
+  border-color: var(--color-ink);
+  transform: translateX(4px);
+}
+
+.partCardActive {
+  border-color: var(--color-ink);
+  border-left: 4px solid var(--color-level-low);
+  background-color: rgba(246, 243, 237, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.partHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.partNumber {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-level-low);
+  font-weight: 700;
+}
+
+.partPinout {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background-color: rgba(16, 39, 43, 0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--color-ink-muted);
+}
+
+.partName {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+
+.partDesc {
+  font-family: var(--font-serif);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--color-ink-muted);
+}
+
+.statusCaption {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  margin-top: 24px;
+}

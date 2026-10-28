@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import styles from './page.module.css';
 import { CanvasRhythmTape } from '@/components/CanvasRhythmTape';
+import { HardwareExplodedView } from '@/components/HardwareExplodedView';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -207,6 +208,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Interactive Hardware Architecture Exploded View */}
+      <HardwareExplodedView />
 
       {/* Info Section: Privacy & Edge Hardware */}
       <section className={styles.infoSection}>

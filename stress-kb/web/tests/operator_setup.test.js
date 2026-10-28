@@ -78,3 +78,4 @@ describe('U3 Operator Setup & Full Visit Simulation', () => {
     assert.equal(sessionFiles[4].filename.startsWith('u02_s05_RUN'), true);
   });
 });
+

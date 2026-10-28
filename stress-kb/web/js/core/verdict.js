@@ -101,3 +101,4 @@ export function generateVerdictSentence(session) {
 
   return `${primaryLevel} stress, ${avgConfidence}% sure. ${rationale}`;
 }
+

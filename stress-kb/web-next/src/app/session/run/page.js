@@ -17,14 +17,16 @@ function TypingSessionContent() {
   const mode = searchParams.get('mode') || 'RUN'; // CAL | RUN
   const condition = searchParams.get('condition') || 'calm'; // calm | pressure
   const lighting = searchParams.get('lighting') || 'normal';
+  const durationParam = parseInt(searchParams.get('duration') || '0', 10);
 
   // State
   const [hasConsented, setHasConsented] = useState(false);
   const [consentChecked, setConsentChecked] = useState(false);
   const [targetText, setTargetText] = useState('');
   const [cursor, setCursor] = useState(0);
-  const [remainingSeconds, setRemainingSeconds] = useState(300);
-  const [durationSeconds, setDurationSeconds] = useState(300);
+  const [mistakes, setMistakes] = useState(new Set());
+  const [remainingSeconds, setRemainingSeconds] = useState(durationParam > 0 ? durationParam : 300);
+  const [durationSeconds, setDurationSeconds] = useState(durationParam > 0 ? durationParam : 300);
   const [score, setScore] = useState(0);
 
   // Modals
@@ -59,6 +61,7 @@ function TypingSessionContent() {
       mode,
       condition,
       lighting,
+      durationSeconds: durationParam > 0 ? durationParam : undefined,
       onProgress: (p) => {
         setCursor(p.cursor);
         setRemainingSeconds(p.remainingSeconds);
@@ -77,7 +80,7 @@ function TypingSessionContent() {
     setTimeout(() => {
       containerRef.current?.focus();
     }, 50);
-  }, [session, targetText, sessionId, userId, mode, condition, lighting]);
+  }, [session, targetText, sessionId, userId, mode, condition, lighting, durationParam]);
 
   // Keyboard Event Handlers (Privacy: Zero characters stored)
   useEffect(() => {
@@ -92,6 +95,21 @@ function TypingSessionContent() {
 
       // Ignore modifier combinations (Ctrl+C, etc)
       if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Handle Backspace visual feedback
+      if (e.key === 'Backspace') {
+        setMistakes((prev) => {
+          const next = new Set(prev);
+          next.delete(cursor - 1);
+          return next;
+        });
+      } else if (e.key.length === 1) {
+        // Check if character matches expected character
+        const expected = targetText[cursor];
+        if (expected && e.key !== expected) {
+          setMistakes((prev) => new Set(prev).add(cursor));
+        }
+      }
 
       e.preventDefault();
       session.handleKeyDown({
@@ -143,7 +161,7 @@ function TypingSessionContent() {
   const handleSaveSelfReport = () => {
     session.stopSession({ selfreport: selfReport });
     setShowSelfReportModal(false);
-    router.push('/session');
+    router.push('/report');
   };
 
   // Quit without saving
@@ -156,12 +174,14 @@ function TypingSessionContent() {
   // Render text characters
   const renderParagraph = () => {
     const chars = [];
+    const activeCursor = cursor;
+
     for (let i = 0; i < targetText.length; i++) {
       const char = targetText[i];
       let cls = styles.charPending;
-      if (i < cursor) {
-        cls = styles.charCorrect;
-      } else if (i === cursor) {
+      if (i < activeCursor) {
+        cls = mistakes.has(i) ? styles.charError : styles.charCorrect;
+      } else if (i === activeCursor) {
         cls = styles.charCurrent;
       }
       chars.push(

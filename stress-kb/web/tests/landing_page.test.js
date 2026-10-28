@@ -51,3 +51,4 @@ describe('U7 Landing Page Specification & Copy Audit', () => {
     assert.ok(pageCode.includes('Set up a session'));
   });
 });
+

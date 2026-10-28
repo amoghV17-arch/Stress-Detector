@@ -15,6 +15,7 @@ export default function OperatorSetupPage() {
   const [userId, setUserId] = useState('u01');
   const [selectedStepIndex, setSelectedStepIndex] = useState(0);
   const [useSimulator, setUseSimulator] = useState(true);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState(1); // 1, 2, 3, 5 min (default 1 min for fast testing)
 
   // Manual overrides (defaults populated from schedule)
   const [manualMode, setManualMode] = useState('');
@@ -76,6 +77,7 @@ export default function OperatorSetupPage() {
       mode: effectiveMode,
       condition: effectiveCondition,
       lighting: effectiveLighting,
+      duration: (selectedDurationMinutes * 60).toString(),
     });
 
     router.push(`/session/run?${query.toString()}`);
@@ -86,10 +88,28 @@ export default function OperatorSetupPage() {
       {/* Header */}
       <header className={styles.header}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-          <div className={styles.breadcrumb}>StressKB &rarr; Operator Setup</div>
-          <Link href="/report" className={styles.btnSecondary} style={{ textDecoration: 'none', fontSize: '12px', padding: '4px 10px' }}>
-            Report Viewer &rarr;
-          </Link>
+          <div className={styles.breadcrumb}>
+            <Link href="/" className={styles.breadcrumbLink}>
+              StressKB
+            </Link>{' '}
+            &rarr; <span>Operator Setup</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <Link
+              href="/demo"
+              className={styles.btnSecondary}
+              style={{ textDecoration: 'none', fontSize: '12px', padding: '4px 10px' }}
+            >
+              Live Demo &rarr;
+            </Link>
+            <Link
+              href="/report"
+              className={styles.btnSecondary}
+              style={{ textDecoration: 'none', fontSize: '12px', padding: '4px 10px' }}
+            >
+              Report Viewer &rarr;
+            </Link>
+          </div>
         </div>
         <h1 className={styles.title}>Set up a session</h1>
         <p className={styles.subtitle}>
@@ -236,8 +256,66 @@ export default function OperatorSetupPage() {
               </select>
             </div>
           </div>
+
+          {/* Duration Selector */}
+          <div className={styles.formGroup} style={{ marginTop: '16px' }}>
+            <label className={styles.formLabel}>Session Duration</label>
+            <div className={styles.durationButtonGroup}>
+              {[1, 2, 3, 5].map((mins) => (
+                <button
+                  key={mins}
+                  type="button"
+                  className={`${styles.durationBtn} ${selectedDurationMinutes === mins ? styles.durationBtnActive : ''}`}
+                  onClick={() => setSelectedDurationMinutes(mins)}
+                >
+                  {mins} min{mins === 1 ? ' (Quick test)' : mins === 3 ? ' (Cal standard)' : mins === 5 ? ' (Full study)' : ''}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
       </div>
+
+      {/* Interactive Guide: What options to pick */}
+      <section className={styles.guideBox}>
+        <div className={styles.guideTitle}>
+          <span>ℹ️</span>
+          <span>How to use Participant &amp; Schedule options</span>
+        </div>
+        <p className={styles.guideText}>
+          The study protocol counterbalances 4 conditions across participants to eliminate order effects.
+          Click a quick setup card below or configure manually above:
+        </p>
+        <div className={styles.guideGrid}>
+          <div
+            className={styles.guideCard}
+            onClick={() => {
+              setManualMode('RUN');
+              setManualCondition('pressure');
+              setSelectedDurationMinutes(1);
+            }}
+          >
+            <div className={styles.guideCardTitle}>⚡ Quick Stress Test (1 min &bull; Pressure)</div>
+            <div className={styles.guideCardDesc}>
+              Fastest way to test! Sets 1-minute countdown timer with time pressure. Keystroke errors and hesitations will trigger stress detection.
+            </div>
+          </div>
+
+          <div
+            className={styles.guideCard}
+            onClick={() => {
+              setManualMode('CAL');
+              setManualCondition('calm');
+              setSelectedDurationMinutes(3);
+            }}
+          >
+            <div className={styles.guideCardTitle}>🎯 Baseline Calibration (3 min &bull; CAL)</div>
+            <div className={styles.guideCardDesc}>
+              Recommended for research. Records relaxed baseline typing rhythm (&mu;, &sigma;) to calibrate subsequent z-score stress estimation.
+            </div>
+          </div>
+        </div>
+      </section>
 
       {/* Checklist & Primary Action Card */}
       <section className={styles.startCard}>

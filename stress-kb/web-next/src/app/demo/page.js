@@ -20,6 +20,7 @@ export default function DemoPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [replaySpeed, setReplaySpeed] = useState(8); // default to 8x for fast viva presentation
   const [playbackTimeMs, setPlaybackTimeMs] = useState(0);
+  const [selectedDurationMinutes, setSelectedDurationMinutes] = useState(1); // 1, 2, 3, 5 min options
 
   // Device Mirror State
   const [oledState, setOledState] = useState({
@@ -41,39 +42,42 @@ export default function DemoPage() {
   const [tapeEvents, setTapeEvents] = useState([]);
   const [tapeWindows, setTapeWindows] = useState([]);
 
-  // Generate realistic synthetic typing events for the 150s demo session
+  const totalDurationMs = selectedDurationMinutes * 60 * 1000;
+
+  // Generate realistic synthetic typing events scaled to the chosen session duration
   const demoEvents = useMemo(() => {
     const evs = [];
     let t = 500;
     let seq = 0;
 
-    // First 45s: Calm baseline typing (steady 250ms IKI, 70ms dwell, low errors)
-    while (t < 45000) {
+    const phase1End = totalDurationMs * 0.3; // Calm baseline
+    const phase2End = totalDurationMs * 0.6; // Rising errors & hesitancy
+
+    // Phase 1: Calm baseline typing (steady 250ms IKI, 70ms dwell, low errors)
+    while (t < phase1End) {
       const dwell = 65 + Math.floor(Math.random() * 20);
       evs.push([seq++, t, 'L', dwell, 0]);
       t += 240 + Math.floor(Math.random() * 30);
     }
 
-    // 45s - 90s: Accelerating, rising errors, hesitancy pauses
-    while (t < 90000) {
+    // Phase 2: Accelerating, rising errors, hesitancy pauses
+    while (t < phase2End) {
       const dwell = 50 + Math.floor(Math.random() * 30);
       const isErr = Math.random() < 0.15;
       const cls = isErr ? 'B' : 'L';
       evs.push([seq++, t, cls, dwell, isErr ? 1 : 0]);
 
-      // Occasional hesitation pause
       if (Math.random() < 0.05) {
-        t += 2200; // >2s pause
+        t += 1800; // >1.8s pause
       } else {
         t += 180 + Math.floor(Math.random() * 40);
       }
     }
 
-    // 90s - 150s: Rushed, severe backspace bursts, erratic rhythm (High stress)
-    while (t < 150000) {
+    // Phase 3: Rushed, severe backspace bursts, erratic rhythm (High stress)
+    while (t < totalDurationMs) {
       const isBurst = Math.random() < 0.25;
       if (isBurst) {
-        // Backspace burst: 3+ backspaces in rapid succession
         for (let b = 0; b < 4; b++) {
           evs.push([seq++, t, 'B', 45, 1]);
           t += 110;
@@ -86,9 +90,21 @@ export default function DemoPage() {
     }
 
     return evs;
-  }, []);
+  }, [totalDurationMs]);
 
-  const totalDurationMs = (DEMO_SESSION.task?.elapsed_s || 150) * 1000;
+  // Scaled windows for demo replay
+  const scaledWindows = useMemo(() => {
+    const origWins = DEMO_SESSION.windows || [];
+    if (origWins.length === 0) return [];
+    const origDuration = (DEMO_SESSION.task?.elapsed_s || 150) * 1000;
+    const factor = totalDurationMs / origDuration;
+
+    return origWins.map((w) => ({
+      ...w,
+      t_start: Math.round(w.t_start * factor),
+      t_end: Math.round(w.t_end * factor),
+    }));
+  }, [totalDurationMs]);
 
   // Replay tick loop
   useEffect(() => {
@@ -111,7 +127,7 @@ export default function DemoPage() {
         setTapeEvents(currentEvs);
 
         // Update tape windows up to nextTime
-        const currentWins = DEMO_SESSION.windows.filter((w) => w.t_end <= nextTime);
+        const currentWins = scaledWindows.filter((w) => w.t_end <= nextTime);
         setTapeWindows(currentWins);
 
         // Update OLED screen from current window
@@ -203,7 +219,13 @@ export default function DemoPage() {
       {/* Top Header */}
       <header className={styles.topBar}>
         <div className={styles.titleArea}>
-          <h1 className={styles.demoTitle}>Demo Mode &middot; Device Mirror &amp; Rhythm Tape</h1>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', marginBottom: '4px' }}>
+            <Link href="/" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 600 }}>
+              StressKB
+            </Link>{' '}
+            &rarr; <span style={{ color: 'var(--color-ink-muted)' }}>Demo Mode</span>
+          </div>
+          <h1 className={styles.demoTitle}>Device Mirror &amp; Rhythm Tape</h1>
           <p className={styles.demoSubtitle}>
             Presentation view with 60 FPS continuous canvas tape, pixel-accurate 128x64 OLED mirror, and alert haptics.
           </p>
@@ -317,8 +339,24 @@ export default function DemoPage() {
                   className={`${styles.btnSpeed} ${replaySpeed === 8 ? styles.btnSpeedActive : ''}`}
                   onClick={() => setReplaySpeed(8)}
                 >
-                  8x Fast (Viva)
+                  8x Fast
                 </button>
+              </div>
+
+              <div className={styles.speedGroup} style={{ marginLeft: '8px' }}>
+                <span>Length:</span>
+                {[1, 2, 3, 5].map((mins) => (
+                  <button
+                    key={mins}
+                    className={`${styles.btnSpeed} ${selectedDurationMinutes === mins ? styles.btnSpeedActive : ''}`}
+                    onClick={() => {
+                      setSelectedDurationMinutes(mins);
+                      handleReset();
+                    }}
+                  >
+                    {mins}m
+                  </button>
+                ))}
               </div>
 
               <div style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
@@ -352,3 +390,4 @@ export default function DemoPage() {
     </main>
   );
 }
+

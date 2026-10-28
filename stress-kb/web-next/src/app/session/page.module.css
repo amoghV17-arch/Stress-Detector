@@ -273,38 +273,158 @@
 .tapeBody {
   height: 220px;
   overflow-y: auto;
-  padding: 12px;
+  padding: 14px 16px;
   font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.6;
-  background-color: var(--color-paper);
-  background-image: var(--grid-pattern);
-  background-size: 12px 12px;
+  font-size: 11.5px;
+  line-height: 1.65;
+  background-color: #FFFFFF;
+  border-top: 1px solid var(--color-border);
 }
 
 .logEntry {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+  padding: 2px 0;
 }
 
 .logTime {
-  color: var(--color-ink-faint);
-  min-width: 64px;
+  color: #6B7280;
+  min-width: 78px;
+  font-size: 11px;
 }
 
 .logRx {
-  color: var(--color-level-low);
+  color: #0F766E;
+  font-weight: 500;
 }
 
 .logTx {
-  color: var(--color-ink);
+  color: #1E3A8A;
+  font-weight: 500;
 }
 
 .logWarn {
-  color: var(--color-level-high);
+  color: #B91C1C;
   font-weight: 600;
 }
 
 .logSys {
+  color: #4B5563;
+}
+
+/* Duration Selector */
+.durationButtonGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.durationBtn {
+  flex: 1;
+  min-width: 70px;
+  padding: 8px 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  background-color: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.durationBtn:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.durationBtnActive {
+  background-color: var(--color-ink);
+  border-color: var(--color-ink);
+  color: var(--color-paper);
+  font-weight: 600;
+}
+
+/* Setup Guide & Explanation Box */
+.guideBox {
+  margin-top: 24px;
+  padding: 18px 20px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-instrument);
+  font-family: var(--font-sans);
+}
+
+.guideTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guideText {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--color-ink-muted);
+  margin-bottom: 12px;
+}
+
+.guideGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+@media (max-width: 640px) {
+  .guideGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.guideCard {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-instrument);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.guideCard:hover {
+  border-color: var(--color-ink);
+}
+
+.guideCardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+
+.guideCardDesc {
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--color-ink-muted);
 }
+
+.breadcrumbLink {
+  color: var(--color-ink);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+  color: var(--color-level-low);
+}
+
+

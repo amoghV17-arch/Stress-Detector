@@ -92,6 +92,12 @@ export default function SessionsArchivePage() {
       {/* Top Header */}
       <header className={styles.topBar}>
         <div className={styles.titleArea}>
+          <div style={{ fontFamily: 'var(--font-sans)', fontSize: '13px', marginBottom: '4px' }}>
+            <Link href="/" style={{ color: 'var(--color-ink)', textDecoration: 'none', fontWeight: 600 }}>
+              StressKB
+            </Link>{' '}
+            &rarr; <span style={{ color: 'var(--color-ink-muted)' }}>Sessions Archive</span>
+          </div>
           <h1 className={styles.pageTitle}>Sessions Archive</h1>
           <p className={styles.pageSubtitle}>
             Local IndexedDB repository of completed typing sessions with mini stress traces.
@@ -284,3 +290,4 @@ export default function SessionsArchivePage() {
     </main>
   );
 }
+

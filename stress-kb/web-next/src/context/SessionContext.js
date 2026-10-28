@@ -119,12 +119,21 @@ export function SessionProvider({ children }) {
       calBaselinePace,
       onProgress: (prog) => {
         setProgress(prog);
+        if (typeof config.onProgress === 'function') {
+          config.onProgress(prog);
+        }
       },
       onAlert: (alert) => {
         addLog(`Alert triggered at window ${alert.win_id} (t=${alert.t}ms)`, 'warn');
+        if (typeof config.onAlert === 'function') {
+          config.onAlert(alert);
+        }
       },
       onWarning: (warn) => {
         addLog(`Warning: ${warn.code} ${warn.detail}`, 'warn');
+        if (typeof config.onWarning === 'function') {
+          config.onWarning(warn);
+        }
       },
       onFinish: (sessionJSON) => {
         setLastCompletedSession(sessionJSON);
@@ -142,6 +151,10 @@ export function SessionProvider({ children }) {
             `Protocol: Calibration pace recorded (${pace.chars} chars in ${pace.durationS}s). Pressure time will be scaled to 0.75x.`,
             'sys'
           );
+        }
+
+        if (typeof config.onFinish === 'function') {
+          config.onFinish(sessionJSON);
         }
       },
     });
@@ -219,3 +232,4 @@ export function useSession() {
   }
   return context;
 }
+
