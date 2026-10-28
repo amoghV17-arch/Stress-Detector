@@ -108,12 +108,131 @@ inline FormattedScreen computeScreenLayout(const DisplayData& d) {
     return s;
 }
 
+#ifdef ARDUINO
+// Lightweight zero-dependency PCF8574 16x2 I2C LCD driver
+class LCD1602_I2C {
+public:
+    LCD1602_I2C(uint8_t addr = 0x27) : addr_(addr), backlight_(0x08) {}
+
+    bool begin() {
+        Wire.beginTransmission(addr_);
+        if (Wire.endTransmission() != 0) return false;
+
+        delay(50);
+        write4Bits(0x03 << 4);
+        delayMicroseconds(4500);
+        write4Bits(0x03 << 4);
+        delayMicroseconds(4500);
+        write4Bits(0x03 << 4);
+        delayMicroseconds(150);
+        write4Bits(0x02 << 4);
+
+        send(0x28, 0); // 2 lines, 5x8 dots
+        send(0x0C, 0); // Display ON, cursor OFF, blink OFF
+        clear();
+        send(0x06, 0); // Entry mode: increment
+        return true;
+    }
+
+    void clear() {
+        send(0x01, 0);
+        delayMicroseconds(2000);
+    }
+
+    void setCursor(uint8_t col, uint8_t row) {
+        int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+        send(0x80 | (col + row_offsets[row & 1]), 0);
+    }
+
+    void printPadded(const char* str, uint8_t width = 16) {
+        uint8_t len = 0;
+        if (str) {
+            while (*str && len < width) {
+                send((uint8_t)(*str++), 1);
+                len++;
+            }
+        }
+        while (len < width) {
+            send(' ', 1);
+            len++;
+        }
+    }
+
+private:
+    uint8_t addr_;
+    uint8_t backlight_;
+
+    void send(uint8_t value, uint8_t mode) {
+        uint8_t high = value & 0xF0;
+        uint8_t low = (value << 4) & 0xF0;
+        write4Bits(high | mode);
+        write4Bits(low | mode);
+    }
+
+    void write4Bits(uint8_t value) {
+        expanderWrite(value);
+        pulseEnable(value);
+    }
+
+    void expanderWrite(uint8_t data) {
+        Wire.beginTransmission(addr_);
+        Wire.write(data | backlight_);
+        Wire.endTransmission();
+    }
+
+    void pulseEnable(uint8_t data) {
+        expanderWrite(data | 0x04);
+        delayMicroseconds(1);
+        expanderWrite(data & ~0x04);
+        delayMicroseconds(50);
+    }
+};
+#endif
+
+enum class DisplayDevice {
+    NONE,
+    OLED_SSD1306,
+    LCD_1602
+};
+
 class DisplayController {
 public:
-    DisplayController() : isPresent_(false), i2cAddr_(I2C_ADDR_OLED) {}
+    DisplayController() : isPresent_(false), devType_(DisplayDevice::NONE), i2cAddr_(I2C_ADDR_OLED) {}
 
     bool begin() {
 #ifdef ARDUINO
+        // 1. Probe 16x2 I2C LCD (0x27 or 0x3F)
+        Wire.beginTransmission(I2C_ADDR_LCD1602);
+        if (Wire.endTransmission() == 0) {
+            i2cAddr_ = I2C_ADDR_LCD1602;
+            lcd_ = new LCD1602_I2C(i2cAddr_);
+            if (lcd_->begin()) {
+                devType_ = DisplayDevice::LCD_1602;
+                isPresent_ = true;
+                lcd_->setCursor(0, 0);
+                lcd_->printPadded("StressKB Ready");
+                lcd_->setCursor(0, 1);
+                lcd_->printPadded("Connected 115200");
+                return true;
+            }
+        } else {
+            Wire.beginTransmission(0x3F);
+            if (Wire.endTransmission() == 0) {
+                i2cAddr_ = 0x3F;
+                lcd_ = new LCD1602_I2C(i2cAddr_);
+                if (lcd_->begin()) {
+                    devType_ = DisplayDevice::LCD_1602;
+                    isPresent_ = true;
+                    lcd_->setCursor(0, 0);
+                    lcd_->printPadded("StressKB Ready");
+                    lcd_->setCursor(0, 1);
+                    lcd_->printPadded("Connected 115200");
+                    return true;
+                }
+            }
+        }
+
+        // 2. Probe SSD1306 OLED (0x3C or 0x3D)
         #if HAS_OLED
         Wire.beginTransmission(I2C_ADDR_OLED);
         if (Wire.endTransmission() == 0) {
@@ -130,6 +249,7 @@ public:
 
         oled_ = new Adafruit_SSD1306(128, 64, &Wire, -1);
         if (oled_->begin(SSD1306_SWITCHCAPVCC, i2cAddr_)) {
+            devType_ = DisplayDevice::OLED_SSD1306;
             isPresent_ = true;
             oled_->clearDisplay();
             oled_->setTextSize(1);
@@ -140,6 +260,7 @@ public:
             return true;
         }
         #endif
+
         isPresent_ = false;
         return false;
 #else
@@ -149,35 +270,51 @@ public:
     }
 
     bool isPresent() const { return isPresent_; }
+    DisplayDevice getDeviceType() const { return devType_; }
 
     void render(const DisplayData& data) {
         FormattedScreen fs = computeScreenLayout(data);
 #ifdef ARDUINO
-        if (!isPresent_ || !oled_) return;
-        oled_->clearDisplay();
-        oled_->setTextSize(1);
-        oled_->setTextColor(SSD1306_WHITE);
+        if (!isPresent_) return;
 
-        // Title
-        oled_->setCursor(0, 0);
-        oled_->println(fs.title);
+        // Render on 16x2 I2C LCD
+        if (devType_ == DisplayDevice::LCD_1602 && lcd_) {
+            char line1[17];
+            char line2[17];
+            if (data.screen == ScreenType::MAIN) {
+                snprintf(line1, sizeof(line1), "%-11s %2.0f%%", fs.title, (double)(data.confidence * 100.0f));
+                snprintf(line2, sizeof(line2), "%-16s", fs.statusLine);
+            } else if (data.screen == ScreenType::CAL) {
+                snprintf(line1, sizeof(line1), "CALIBRATING...  ");
+                snprintf(line2, sizeof(line2), "Win: %u/6 Valid", (unsigned int)data.calWindows);
+            } else {
+                snprintf(line1, sizeof(line1), "%-16s", fs.title);
+                snprintf(line2, sizeof(line2), "%-16s", fs.metricLine);
+            }
+            lcd_->setCursor(0, 0);
+            lcd_->printPadded(line1, 16);
+            lcd_->setCursor(0, 1);
+            lcd_->printPadded(line2, 16);
+            return;
+        }
 
-        // Divider
-        oled_->drawFastHLine(0, 12, 128, SSD1306_WHITE);
-
-        // Metric line
-        oled_->setCursor(0, 18);
-        oled_->println(fs.metricLine);
-
-        // Status line
-        oled_->setCursor(0, 32);
-        oled_->println(fs.statusLine);
-
-        // Footer line
-        oled_->setCursor(0, 48);
-        oled_->println(fs.footerLine);
-
-        oled_->display();
+        // Render on SSD1306 OLED
+        if (devType_ == DisplayDevice::OLED_SSD1306 && oled_) {
+            oled_->clearDisplay();
+            oled_->setTextSize(1);
+            oled_->setTextColor(SSD1306_WHITE);
+            oled_->setCursor(0, 0);
+            oled_->println(fs.title);
+            oled_->drawFastHLine(0, 12, 128, SSD1306_WHITE);
+            oled_->setCursor(0, 18);
+            oled_->println(fs.metricLine);
+            oled_->setCursor(0, 32);
+            oled_->println(fs.statusLine);
+            oled_->setCursor(0, 48);
+            oled_->println(fs.footerLine);
+            oled_->display();
+            return;
+        }
 #else
         (void)fs;
 #endif
@@ -185,9 +322,11 @@ public:
 
 private:
     bool isPresent_;
+    DisplayDevice devType_;
     uint8_t i2cAddr_;
 #ifdef ARDUINO
     Adafruit_SSD1306* oled_{nullptr};
+    LCD1602_I2C* lcd_{nullptr};
 #endif
 };
 

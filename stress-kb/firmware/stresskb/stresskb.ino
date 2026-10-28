@@ -54,19 +54,40 @@ DisplayData displayData;
 // Window Engine
 WindowEngine windowEngine;
 
-// Fast I2C bus check at boot (targeted to BH1750 and SSD1306 to prevent 8s bare-board timeout)
+// Fast I2C bus check at boot (checks BH1750, 16x2 LCD, and SSD1306 OLED)
 void scanI2CBus() {
 #ifdef ARDUINO
     Wire.setTimeOut(10);
 #endif
     bool foundAny = false;
 
+    // Check BH1750 (0x23 or 0x5C)
     Wire.beginTransmission(I2C_ADDR_BH1750);
     if (Wire.endTransmission() == 0) {
         Serial.println("I2C: Found BH1750 at 0x23");
         foundAny = true;
+    } else {
+        Wire.beginTransmission(0x5C);
+        if (Wire.endTransmission() == 0) {
+            Serial.println("I2C: Found BH1750 at 0x5C");
+            foundAny = true;
+        }
     }
 
+    // Check 16x2 I2C LCD (0x27 or 0x3F)
+    Wire.beginTransmission(I2C_ADDR_LCD1602);
+    if (Wire.endTransmission() == 0) {
+        Serial.println("I2C: Found 16x2 LCD at 0x27");
+        foundAny = true;
+    } else {
+        Wire.beginTransmission(0x3F);
+        if (Wire.endTransmission() == 0) {
+            Serial.println("I2C: Found 16x2 LCD at 0x3F");
+            foundAny = true;
+        }
+    }
+
+    // Check SSD1306 OLED (0x3C or 0x3D)
     Wire.beginTransmission(I2C_ADDR_OLED);
     if (Wire.endTransmission() == 0) {
         Serial.println("I2C: Found SSD1306 OLED at 0x3C");

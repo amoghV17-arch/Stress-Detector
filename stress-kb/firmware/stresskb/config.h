@@ -35,8 +35,9 @@
 #define PIN_I2C_SCL 22 // GPIO22: I2C Clock line
 
 // I2C Addresses
-#define I2C_ADDR_BH1750 0x23 // GY-302 ADDR tied to GND
-#define I2C_ADDR_OLED   0x3C // SSD1306 0.96" OLED display (fallback 0x3D)
+#define I2C_ADDR_BH1750  0x23 // GY-302 ADDR tied to GND (fallback 0x5C)
+#define I2C_ADDR_LCD1602 0x27 // 16x2 I2C LCD backpack (fallback 0x3F)
+#define I2C_ADDR_OLED    0x3C // SSD1306 0.96" OLED display (fallback 0x3D)
 
 // Actuators and Indicators
 #define PIN_MOTOR 25     // GPIO25: NPN transistor base via 1k resistor driving motor
