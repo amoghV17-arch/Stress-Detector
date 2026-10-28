@@ -1,0 +1,144 @@
+.container {
+  min-height: 100vh;
+  padding: 32px 24px 64px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--border-rule);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btnAction {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btnAction:hover {
+  border-color: var(--color-ink);
+  background-color: rgba(185, 199, 193, 0.2);
+}
+
+.btnDanger {
+  color: var(--color-level-high);
+}
+
+.btnDanger:hover {
+  border-color: var(--color-level-high);
+  background-color: rgba(216, 67, 43, 0.1);
+}
+
+/* Sessions List Card */
+.archiveCard {
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  background-color: var(--color-paper);
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.sessionsTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: left;
+}
+
+.sessionsTable th, .sessionsTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--color-grid);
+  vertical-align: middle;
+}
+
+.sessionsTable th {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  background-color: rgba(185, 199, 193, 0.2);
+}
+
+/* Mini Stress Trace */
+.miniTraceSvg {
+  display: block;
+  background-color: rgba(16, 39, 43, 0.04);
+  border-radius: var(--radius-instrument);
+  border: 1px solid var(--color-grid);
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--color-ink-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Overlay Comparison Section (Stretch) */
+.overlaySection {
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  background-color: var(--color-paper);
+  padding: 20px;
+  margin-top: 32px;
+}
+
+.overlayHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.overlayTitle {
+  font-size: 15px;
+  font-weight: 700;
+}

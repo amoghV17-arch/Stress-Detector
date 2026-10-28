@@ -1,0 +1,112 @@
+.container {
+  min-height: 100vh;
+  padding: 32px 24px 64px 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--border-rule);
+  padding-bottom: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pageSubtitle {
+  font-size: 14px;
+  color: var(--color-ink-muted);
+}
+
+.btnAction {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btnAction:hover {
+  border-color: var(--color-ink);
+  background-color: rgba(185, 199, 193, 0.2);
+}
+
+/* Methodological Articles Stack */
+.articleStack {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.section {
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  background-color: var(--color-paper);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sectionTitle {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+  border-bottom: var(--border-rule);
+  padding-bottom: 8px;
+}
+
+.paragraph {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--color-ink);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.calloutBox {
+  border-left: 3px solid var(--color-ink);
+  padding: 12px 16px;
+  background-color: rgba(185, 199, 193, 0.25);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-ink);
+}
+
+.limitationItem {
+  margin-bottom: 6px;
+}
