@@ -1,0 +1,255 @@
+.demoContainer {
+  min-height: 100vh;
+  padding: 32px 24px 64px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  transition: transform 0.05s ease;
+}
+
+/* 2px Edge Shake on Vibration Alert */
+@keyframes edgeShake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-2px, 0); }
+  40% { transform: translate(2px, 0); }
+  60% { transform: translate(-2px, 0); }
+  80% { transform: translate(2px, 0); }
+  100% { transform: translate(0, 0); }
+}
+
+.edgeShake {
+  animation: edgeShake 0.4s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edgeShake {
+    animation: none !important;
+  }
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--border-rule);
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.demoTitle {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.demoSubtitle {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btnAction {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-ink);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.btnAction:hover {
+  border-color: var(--color-ink);
+  background-color: rgba(185, 199, 193, 0.2);
+}
+
+.btnPrimary {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border: 1px solid var(--color-ink);
+}
+
+.btnPrimary:hover {
+  background-color: #1a3c42;
+  color: var(--color-paper);
+}
+
+/* Dual Stage Grid: Tape + OLED Display */
+.instrumentGrid {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 860px) {
+  .instrumentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tapeCard {
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  background-color: var(--color-paper);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.cardSubtitle {
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+
+/* Live typing or replay control panel */
+.controlCard {
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  background-color: var(--color-paper);
+  padding: 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modeToggleBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: var(--border-rule);
+  padding-bottom: 12px;
+}
+
+.btnMode {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  border-radius: var(--radius-instrument);
+  transition: all 0.15s ease;
+}
+
+.btnModeActive {
+  background-color: rgba(185, 199, 193, 0.4);
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.replayControls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.speedGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+}
+
+.btnSpeed {
+  background: transparent;
+  border: var(--border-rule);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: var(--radius-instrument);
+}
+
+.btnSpeedActive {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.typingInput {
+  width: 100%;
+  height: 90px;
+  padding: 12px;
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.5;
+  background-color: #f7faf8;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  color: var(--color-ink);
+  resize: none;
+  outline: none;
+}
+
+.typingInput:focus {
+  border-color: var(--color-ink);
+}
+
+.progressBarContainer {
+  width: 100%;
+  height: 6px;
+  background-color: rgba(185, 199, 193, 0.4);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressBar {
+  height: 100%;
+  background-color: var(--color-ink);
+  transition: width 0.1s linear;
+}
+
+/* Alert Notification Banner */
+.alertBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background-color: rgba(216, 67, 43, 0.15);
+  border: 1px solid var(--color-level-high);
+  border-radius: var(--radius-instrument);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-level-high);
+  font-weight: 700;
+}
