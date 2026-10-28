@@ -11,7 +11,10 @@ endif
 all: test
 
 serve:
-	$(PYTHON) -m http.server 8000 -d web
+	npm --prefix web-next run dev
+
+serve-legacy:
+	$(PYTHON) -m http.server 8000 -d web-legacy
 
 test:
 	node --test web/tests/*.test.js
