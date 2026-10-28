@@ -1,5 +1,6 @@
 import { Archivo, Source_Serif_4 } from 'next/font/google';
 import './globals.css';
+import { SessionProvider } from '@/context/SessionContext';
 
 const archivo = Archivo({
   subsets: ['latin'],
@@ -21,7 +22,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${archivo.variable} ${sourceSerif.variable}`}>
-      <body>{children}</body>
+      <body>
+        <SessionProvider>{children}</SessionProvider>
+      </body>
     </html>
   );
 }

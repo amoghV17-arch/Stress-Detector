@@ -30,6 +30,8 @@
 - Never rely on colour alone: stress levels also differ by line style/hatching and are labelled.
 - Dark, neon-on-navy, cream with terracotta, and purple gradients are all off the table.
 
+
+
 **Motion budget: exactly four moments**, all disabled or replaced by the final static state under `prefers-reduced-motion`:
 1. Landing hero: a live rhythm tape that draws as the visitor types (draws ticks only, never letters).
 2. Landing: ONE pinned scroll sequence showing the pipeline (events, window, features, baseline, model, verdict).

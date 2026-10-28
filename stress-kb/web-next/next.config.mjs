@@ -14,6 +14,7 @@ const nextConfig = {
     config.resolve.alias = {
       ...config.resolve.alias,
       '@core': path.resolve(__dirname, '../web/js/core'),
+      '@sim': path.resolve(__dirname, '../web/sim'),
     };
     return config;
   },
