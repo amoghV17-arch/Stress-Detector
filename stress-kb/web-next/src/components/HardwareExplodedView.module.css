@@ -15,7 +15,7 @@
 
 .header {
   max-width: 900px;
-  margin: 0 auto 40px auto;
+  margin: 0 auto 36px auto;
   text-align: center;
 }
 
@@ -42,13 +42,13 @@
   font-size: 17px;
   line-height: 1.6;
   color: var(--color-ink-muted);
-  max-width: 680px;
+  max-width: 720px;
   margin: 0 auto;
 }
 
 /* Scrub & Control Bar */
 .controlBar {
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto 36px auto;
   display: flex;
   align-items: center;
@@ -78,7 +78,7 @@
   background: transparent;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-instrument);
-  padding: 5px 12px;
+  padding: 5px 14px;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
@@ -99,17 +99,17 @@
   border-color: var(--color-ink);
 }
 
-/* Exploded Stage Grid: Diagram on left/center, Callout Cards on right */
+/* Exploded Stage Grid: Diagram on left, Callout Cards on right */
 .stageGrid {
-  max-width: 1140px;
+  max-width: 1360px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
-  gap: 40px;
-  align-items: center;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 36px;
+  align-items: start;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1080px) {
   .stageGrid {
     grid-template-columns: 1fr;
     gap: 32px;
@@ -118,21 +118,23 @@
 
 .svgContainer {
   width: 100%;
-  min-height: 520px;
+  min-height: 640px;
   background-color: #FFFFFF;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-instrument);
-  padding: 24px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  padding: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   position: relative;
+  overflow: hidden;
 }
 
 .svgStage {
   width: 100%;
-  max-width: 500px;
+  max-width: 760px;
   height: auto;
   overflow: visible;
 }
@@ -141,14 +143,14 @@
 .partsList {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .partCard {
   background-color: #FFFFFF;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-instrument);
-  padding: 14px 16px;
+  padding: 12px 16px;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
@@ -162,7 +164,7 @@
 .partCardActive {
   border-color: var(--color-ink);
   border-left: 4px solid var(--color-level-low);
-  background-color: rgba(246, 243, 237, 0.5);
+  background-color: rgba(246, 243, 237, 0.6);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -191,15 +193,15 @@
 
 .partName {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--color-ink);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .partDesc {
   font-family: var(--font-serif);
-  font-size: 12.5px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--color-ink-muted);
 }
@@ -210,4 +212,18 @@
   font-size: 12px;
   color: var(--color-ink-muted);
   margin-top: 24px;
+}
+
+.badgeSetup {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  background-color: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.2);
+  border-radius: 999px;
+  color: #0369A1;
+  margin-bottom: 12px;
 }

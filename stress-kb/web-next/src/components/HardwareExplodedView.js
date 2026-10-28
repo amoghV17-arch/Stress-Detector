@@ -11,79 +11,73 @@ if (typeof window !== 'undefined') {
 
 const HARDWARE_PARTS = [
   {
-    id: 'acrylic',
+    id: 'laptop',
+    num: '00',
+    name: 'Participant Workstation (Laptop)',
+    pinout: 'USB Host • Study Browser',
+    desc: 'The host laptop running the zero-knowledge typing session in Chrome/Edge. Keystroke timing is streamed over Web Serial with zero character logging.',
+    color: '#64748B',
+  },
+  {
+    id: 'clip',
     num: '01',
-    name: 'Laser-Cut Acrylic Faceplate',
-    pinout: 'M3 Standoffs',
-    desc: '3mm cast acrylic enclosure with laser-cut optical aperture directly above the BH1750 sensor, protecting circuitry while allowing ambient lux capture.',
-    color: '#3B82F6',
-    baseY: 210,
-    explodedY: 45,
+    name: 'Clip-On Monitor Bar Mount',
+    pinout: 'Top Bezel Clamp',
+    desc: 'Custom monitor clip resting securely on the laptop screen bezel, holding the OLED display front and center while elevating the light sensor above obstacles.',
+    color: '#0284C7',
   },
   {
     id: 'oled',
     num: '02',
     name: '0.96" SSD1306 OLED Display',
     pinout: 'I2C 0x3C • GPIO21/22',
-    desc: '128x64 monochrome OLED providing real-time hardware status: stress level bar, confidence score, link health, and 1Hz heartbeat tick.',
+    desc: 'Front-facing 128×64 monochrome OLED providing real-time hardware status: "StressKB Ready", confidence scores, stress level bars, and heartbeat tick.',
     color: '#10B981',
-    baseY: 225,
-    explodedY: 110,
   },
   {
     id: 'bh1750',
     num: '03',
-    name: 'BH1750 Ambient Photometer',
+    name: 'BH1750 Ambient Light Sensor',
     pinout: 'I2C 0x23 • 16-bit Lux',
-    desc: 'Digital ambient light sensor measuring 1–65,535 lux. Controls for lighting conditions (circadian covariate) without camera or video monitoring.',
+    desc: 'Mounted on the very top of the monitor clip (unobstructed) to measure ambient room photometry (1–65,535 lux), controlling for lighting variations without cameras.',
     color: '#F59E0B',
-    baseY: 232,
-    explodedY: 175,
   },
   {
     id: 'esp32',
     num: '04',
     name: 'ESP32-WROOM-32 AI Core',
     pinout: 'Xtensa Dual-Core 240MHz',
-    desc: 'Hardware brain running on-device TinyML. Computes 1-pass Welford variance, z-score normalization, and 100-tree Random Forest inference in <1ms.',
+    desc: 'Mounted directly behind the clip. Computes 1-pass Welford online variance, baseline z-scoring, and 100-tree TinyML Random Forest inference in <1ms.',
     color: '#0F766E',
-    baseY: 245,
-    explodedY: 245,
   },
   {
     id: 'motor',
     num: '05',
-    name: 'Haptic ERM Vibration Motor',
-    pinout: 'GPIO25 • BC547 NPN Switch',
-    desc: 'Coin vibration motor with flyback clamp diode and 100µF capacitor. Delivers tactile feedback pulses when sustained acute stress is detected.',
+    name: 'Haptic ERM Vibration Motor & Driver',
+    pinout: 'GPIO25 • BC547 Transistor',
+    desc: '10mm coin motor with flyback diode and 100µF capacitor in the housing base, pulsing tactile alerts when sustained cognitive stress is detected.',
     color: '#EF4444',
-    baseY: 255,
-    explodedY: 315,
   },
   {
-    id: 'carrier',
+    id: 'wiring',
     num: '06',
-    name: 'Carrier PCB & I2C Bus Plane',
+    name: 'I2C Bus & Jumper Wire Harness',
     pinout: '3.3V / GND / SDA / SCL',
-    desc: 'Common ground plane and 400kHz I2C bus wiring tying the sensor, OLED, and microcontroller together with minimal signal capacitance.',
-    color: '#6366F1',
-    baseY: 265,
-    explodedY: 385,
+    desc: 'Color-coded jumper wire harness routing power (3.3V red), ground (black), and shared 400kHz I2C data lines (SDA yellow, SCL blue) between all modules.',
+    color: '#3B82F6',
   },
   {
     id: 'usbc',
     num: '07',
-    name: 'USB-C Serial Isolation Bridge',
-    pinout: '115200 Baud UART',
-    desc: 'Zero-latency Web Serial bridge streaming key timing events (K-lines) and peripheral frames to the web application with zero character logging.',
+    name: 'USB Serial Cable to Laptop',
+    pinout: '115200 Baud Hardware UART',
+    desc: 'High-speed hardware serial cable carrying timing events (K-lines) and telemetry from the ESP32 to the browser with complete electrical isolation.',
     color: '#8B5CF6',
-    baseY: 275,
-    explodedY: 455,
   },
 ];
 
 export function HardwareExplodedView() {
-  const [progress, setProgress] = useState(0.2); // 0 = assembled, 1 = exploded
+  const [progress, setProgress] = useState(0.25); // 0 = assembled on laptop, 1 = exploded
   const [activePartId, setActivePartId] = useState('esp32');
   const sectionRef = useRef(null);
 
@@ -98,7 +92,6 @@ export function HardwareExplodedView() {
         end: 'bottom 20%',
         scrub: 0.8,
         onUpdate: (self) => {
-          // Progress directly driven by scroll position
           setProgress(parseFloat(self.progress.toFixed(3)));
         },
       });
@@ -110,7 +103,7 @@ export function HardwareExplodedView() {
   const handleAssemble = () => {
     gsap.to({ val: progress }, {
       val: 0,
-      duration: 0.8,
+      duration: 0.85,
       ease: 'power2.out',
       onUpdate: function () {
         setProgress(this.targets()[0].val);
@@ -121,7 +114,7 @@ export function HardwareExplodedView() {
   const handleExplode = () => {
     gsap.to({ val: progress }, {
       val: 1,
-      duration: 0.8,
+      duration: 0.85,
       ease: 'power2.out',
       onUpdate: function () {
         setProgress(this.targets()[0].val);
@@ -129,21 +122,49 @@ export function HardwareExplodedView() {
     });
   };
 
-  // Interpolate part Y position based on progress
-  const getPartY = (part) => {
-    return part.baseY + (part.explodedY - part.baseY) * progress;
-  };
+  // Interpolated Positions
+  // 1. Clip Frame
+  const clipX = 380;
+  const clipY = 210 - 28 * progress;
 
-  const activePart = HARDWARE_PARTS.find((p) => p.id === activePartId) || HARDWARE_PARTS[3];
+  // 2. OLED Display (Front / Left separation)
+  const oledX = 380 - 155 * progress;
+  const oledY = 188 - 65 * progress;
+
+  // 3. BH1750 Light Sensor (Vertical upward separation)
+  const bhX = 380;
+  const bhY = 142 - 95 * progress;
+
+  // 4. ESP32 Microcontroller (Rear / Right separation)
+  const espX = 380 + 155 * progress;
+  const espY = 188 - 55 * progress;
+
+  // 5. Motor Driver & Vibration Coin (Down / Right separation)
+  const motX = 380 + 180 * progress;
+  const motY = 210 + 60 * progress;
+
+  // Cable start point on laptop USB port
+  const laptopUsbX = 165;
+  const laptopUsbY = 452;
+
+  // ESP32 USB Port location
+  const espUsbX = espX - 60;
+  const espUsbY = espY + 12;
+
+  const activePart = HARDWARE_PARTS.find((p) => p.id === activePartId) || HARDWARE_PARTS[4];
 
   return (
     <section className={styles.explodedSection} ref={sectionRef} id="hardware-architecture">
       <div className={styles.header}>
         <div className={styles.sectionTag}>Interactive Hardware Architecture</div>
-        <h2 className={styles.title}>StressKB Hardware &bull; Exploded View</h2>
+        <div className={styles.badgeSetup}>
+          <span>📷</span>
+          <span>Clip-On Monitor Bar Setup &bull; Reference Hardware</span>
+        </div>
+        <h2 className={styles.title}>StressKB Hardware &bull; Exploded Connections</h2>
         <p className={styles.subtitle}>
-          Scroll down to disassemble the edge instrument into its discrete physical subsystems;
-          scroll up to reassemble. Click any component to inspect its pinout and firmware role.
+          Scroll down to disassemble the clip-on monitor hardware and trace every physical connection to the laptop;
+          scroll up to reassemble. Click any component to highlight its pinout and wiring harness.
         </p>
       </div>
 
@@ -160,7 +181,7 @@ export function HardwareExplodedView() {
           onChange={(e) => setProgress(parseFloat(e.target.value))}
           aria-label="Disassembly progression slider"
         />
-        <span className={styles.sliderLabel}>Exploded (100%)</span>
+        <span className={styles.sliderLabel}>Disassembled (100%)</span>
 
         <button
           className={`${styles.btnControl} ${progress < 0.15 ? styles.btnActive : ''}`}
@@ -178,135 +199,410 @@ export function HardwareExplodedView() {
 
       {/* Interactive Stage */}
       <div className={styles.stageGrid}>
-        {/* Left: SVG Exploded Diagram */}
+        {/* Left: Interactive SVG Diagram */}
         <div className={styles.svgContainer}>
           <svg
             className={styles.svgStage}
-            viewBox="0 0 460 520"
+            viewBox="0 0 760 620"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
-              <filter id="partGlow" x="-20%" y="-20%" width="140%" height="140%">
-                <feDropShadow dx="0" dy="3" stdDeviation="4" floodOpacity="0.15" />
+              <filter id="shadowFilter" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="5" floodOpacity="0.12" />
               </filter>
+              <filter id="glowHighlight" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#0284C7" floodOpacity="0.6" />
+              </filter>
+              <linearGradient id="laptopLid" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1E293B" />
+                <stop offset="100%" stopColor="#0F172A" />
+              </linearGradient>
+              <linearGradient id="laptopBase" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#334155" />
+                <stop offset="100%" stopColor="#1E293B" />
+              </linearGradient>
+              <linearGradient id="screenGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#F8FAFC" />
+                <stop offset="100%" stopColor="#EEF2F6" />
+              </linearGradient>
             </defs>
 
-            {/* Connecting Standoff Axis Guide Lines (Fade in as exploded) */}
-            {progress > 0.1 && (
-              <g stroke="#9CA3AF" strokeWidth="1.2" strokeDasharray="3,3" opacity={Math.min(1, progress * 1.5)}>
-                <line x1="70" y1={getPartY(HARDWARE_PARTS[0])} x2="70" y2={getPartY(HARDWARE_PARTS[6]) + 20} />
-                <line x1="390" y1={getPartY(HARDWARE_PARTS[0])} x2="390" y2={getPartY(HARDWARE_PARTS[6]) + 20} />
-                <line x1="160" y1={getPartY(HARDWARE_PARTS[1])} x2="160" y2={getPartY(HARDWARE_PARTS[5])} />
-                <line x1="300" y1={getPartY(HARDWARE_PARTS[2])} x2="300" y2={getPartY(HARDWARE_PARTS[5])} />
-              </g>
-            )}
+            {/* ==================================================== */}
+            {/* 1. LAPTOP WORKSTATION (BASE & KEYBOARD)             */}
+            {/* ==================================================== */}
+            <g id="laptop-anchor" onClick={() => setActivePartId('laptop')} style={{ cursor: 'pointer' }}>
+              {/* Laptop Base Body */}
+              <polygon
+                points="180,420 580,420 640,570 120,570"
+                fill="url(#laptopBase)"
+                stroke="#475569"
+                strokeWidth="1.5"
+                filter="url(#shadowFilter)"
+              />
 
-            {/* 07: USB-C Base Bridge (Bottom) */}
-            <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[6]) - 275})`}
-              onClick={() => setActivePartId('usbc')}
-              style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
-            >
-              <rect x="170" y="270" width="120" height="26" rx="5" fill="#374151" stroke={activePartId === 'usbc' ? '#8B5CF6' : '#1F2937'} strokeWidth={activePartId === 'usbc' ? 2 : 1} />
-              <rect x="200" y="276" width="60" height="14" rx="3" fill="#D1D5DB" />
-              <text x="230" y="287" textAnchor="middle" fill="#111827" fontSize="8" fontFamily="monospace" fontWeight="bold">USB-C UART</text>
+              {/* Keyboard Well */}
+              <polygon
+                points="198,430 562,430 605,510 155,510"
+                fill="#0F172A"
+                stroke="#334155"
+                strokeWidth="1"
+              />
+
+              {/* Key Rows (Stylized Keyboard Deck) */}
+              {/* Row 1 */}
+              {[...Array(14)].map((_, i) => (
+                <rect key={`k1-${i}`} x={205 + i * 25} y="434" width="21" height="12" rx="2" fill="#1E293B" />
+              ))}
+              {/* Row 2 */}
+              {[...Array(13)].map((_, i) => (
+                <rect key={`k2-${i}`} x={202 + i * 27.5} y="450" width="23" height="13" rx="2" fill="#1E293B" />
+              ))}
+              {/* Row 3 */}
+              {[...Array(13)].map((_, i) => (
+                <rect key={`k3-${i}`} x={198 + i * 28.5} y="468" width="24" height="14" rx="2" fill="#1E293B" />
+              ))}
+              {/* Row 4 (Spacebar Row) */}
+              <rect x="180" y="488" width="36" height="16" rx="2" fill="#1E293B" />
+              <rect x="222" y="488" width="36" height="16" rx="2" fill="#1E293B" />
+              <rect x="264" y="488" width="210" height="16" rx="3" fill="#334155" stroke="#475569" strokeWidth="0.8" />
+              <rect x="480" y="488" width="36" height="16" rx="2" fill="#1E293B" />
+              <rect x="522" y="488" width="36" height="16" rx="2" fill="#1E293B" />
+
+              {/* Trackpad */}
+              <rect
+                x="320"
+                y="520"
+                width="120"
+                height="44"
+                rx="4"
+                fill="#1E293B"
+                stroke="#475569"
+                strokeWidth="1"
+              />
+
+              {/* USB Port on Left Chassis */}
+              <rect
+                x="150"
+                y="448"
+                width="16"
+                height="8"
+                rx="2"
+                fill="#0F172A"
+                stroke={activePartId === 'usbc' ? '#8B5CF6' : '#64748B'}
+                strokeWidth={activePartId === 'usbc' ? 2 : 1}
+              />
+              <text x="140" y="443" fill="#94A3B8" fontSize="8" fontFamily="monospace" textAnchor="end">USB HOST</text>
+
+              {/* Laptop Screen Frame (Lid Bezel) */}
+              <rect
+                x="190"
+                y="210"
+                width="380"
+                height="210"
+                rx="8"
+                fill="url(#laptopLid)"
+                stroke="#334155"
+                strokeWidth="2"
+              />
+
+              {/* Screen Glass Inner Area */}
+              <rect
+                x="204"
+                y="222"
+                width="352"
+                height="186"
+                rx="4"
+                fill="url(#screenGrad)"
+                stroke="#CBD5E1"
+                strokeWidth="1"
+              />
+
+              {/* Laptop Web App Content (Matches Reference Image 4) */}
+              <rect x="204" y="222" width="352" height="18" fill="#F1F5F9" />
+              <circle cx="214" cy="231" r="3" fill="#EF4444" />
+              <circle cx="222" cy="231" r="3" fill="#F59E0B" />
+              <circle cx="230" cy="231" r="3" fill="#10B981" />
+              <text x="380" y="234" textAnchor="middle" fill="#64748B" fontSize="9" fontFamily="sans-serif">
+                StressKB &bull; Keystroke Biometrics
+              </text>
+
+              {/* App UI on Screen */}
+              <text x="380" y="272" textAnchor="middle" fill="#0F172A" fontSize="16" fontWeight="bold" fontFamily="sans-serif">
+                StressKB
+              </text>
+              <text x="380" y="290" textAnchor="middle" fill="#64748B" fontSize="11" fontFamily="sans-serif">
+                Typing Task &bull; Zero-Knowledge Mode
+              </text>
+
+              {/* Typing Box */}
+              <rect x="230" y="306" width="300" height="52" rx="4" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1" />
+              <text x="242" y="324" fill="#334155" fontSize="10" fontFamily="serif">
+                The quick brown fox jumps over the lazy dog...
+              </text>
+              <line x1="242" y1="327" x2="250" y2="327" stroke="#0F172A" strokeWidth="1.5" />
+              <text x="242" y="342" fill="#94A3B8" fontSize="9" fontFamily="serif">
+                lantern light reflected off wet planks as dockworkers secured mooring lines...
+              </text>
+
+              {/* Start Button */}
+              <rect x="355" y="366" width="50" height="20" rx="4" fill="#2563EB" />
+              <text x="380" y="380" textAnchor="middle" fill="#FFFFFF" fontSize="9" fontWeight="bold" fontFamily="sans-serif">
+                Start
+              </text>
+
+              {/* Top Bezel Webcam Notch / Mounting Zone */}
+              <circle cx="380" cy="216" r="3" fill="#0F172A" stroke="#475569" strokeWidth="1" />
             </g>
 
-            {/* 06: Carrier Breadboard & Bus Plane */}
-            <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[5]) - 265})`}
-              onClick={() => setActivePartId('carrier')}
-              style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
-            >
-              <rect x="50" y="250" width="360" height="42" rx="4" fill="#F3F4F6" stroke={activePartId === 'carrier' ? '#6366F1' : '#D1D5DB'} strokeWidth={activePartId === 'carrier' ? 2.5 : 1.2} />
-              {/* Bus trace lines */}
-              <line x1="70" y1="262" x2="390" y2="262" stroke="#EF4444" strokeWidth="1" />
-              <line x1="70" y1="268" x2="390" y2="268" stroke="#10B981" strokeWidth="1" />
-              <line x1="70" y1="274" x2="390" y2="274" stroke="#3B82F6" strokeWidth="1" />
-              <line x1="70" y1="280" x2="390" y2="280" stroke="#1F2937" strokeWidth="1" />
-              <text x="75" y="259" fill="#6B7280" fontSize="7" fontFamily="monospace">3V3 • SDA • SCL • GND</text>
+            {/* ==================================================== */}
+            {/* 2. DYNAMIC WIRING CONNECTIONS (DISASSEMBLE/REASSEMBLE) */}
+            {/* ==================================================== */}
+            <g id="wire-harness" opacity={progress > 0.05 ? 1 : 0.85}>
+              {/* (A) USB SERIAL CABLE: Laptop USB port (165, 452) -> ESP32 Micro-USB (espUsbX, espUsbY) */}
+              <path
+                d={`M ${laptopUsbX} ${laptopUsbY} C ${laptopUsbX - 30 - 30 * progress} ${laptopUsbY - 100}, ${espUsbX - 40 * progress} ${espUsbY + 80 * progress}, ${espUsbX} ${espUsbY}`}
+                fill="none"
+                stroke={activePartId === 'usbc' ? '#8B5CF6' : '#1E293B'}
+                strokeWidth={activePartId === 'usbc' ? 3.5 : 2.5}
+                strokeLinecap="round"
+                filter={activePartId === 'usbc' ? 'url(#glowHighlight)' : 'none'}
+              />
+              {/* Cable Tag */}
+              {progress > 0.35 && (
+                <g transform={`translate(${(laptopUsbX + espUsbX) / 2 - 60}, ${(laptopUsbY + espUsbY) / 2 + 20})`}>
+                  <rect x="0" y="0" width="130" height="18" rx="4" fill="#1E293B" opacity="0.9" />
+                  <text x="65" y="12" textAnchor="middle" fill="#E2E8F0" fontSize="8" fontFamily="monospace">
+                    USB UART (115200 Baud)
+                  </text>
+                </g>
+              )}
+
+              {/* (B) I2C SDA WIRE (Yellow): ESP32 GPIO21 -> OLED SDA & BH1750 SDA */}
+              <path
+                d={`M ${espX - 25} ${espY + 28} C ${espX - 60} ${espY + 50}, ${oledX + 60} ${oledY + 55}, ${oledX + 35} ${oledY + 48}`}
+                fill="none"
+                stroke="#EAB308"
+                strokeWidth={activePartId === 'wiring' || activePartId === 'oled' ? 2.5 : 1.5}
+                strokeDasharray={progress > 0.6 ? '4,2' : 'none'}
+              />
+              <path
+                d={`M ${espX - 25} ${espY + 28} C ${espX - 80} ${espY - 20}, ${bhX + 30} ${bhY + 60}, ${bhX + 12} ${bhY + 34}`}
+                fill="none"
+                stroke="#EAB308"
+                strokeWidth={activePartId === 'wiring' || activePartId === 'bh1750' ? 2.5 : 1.5}
+              />
+
+              {/* (C) I2C SCL WIRE (Cyan/Blue): ESP32 GPIO22 -> OLED SCL & BH1750 SCL */}
+              <path
+                d={`M ${espX - 15} ${espY + 28} C ${espX - 55} ${espY + 45}, ${oledX + 50} ${oledY + 50}, ${oledX + 25} ${oledY + 48}`}
+                fill="none"
+                stroke="#38BDF8"
+                strokeWidth={activePartId === 'wiring' || activePartId === 'oled' ? 2.5 : 1.5}
+                strokeDasharray={progress > 0.6 ? '4,2' : 'none'}
+              />
+              <path
+                d={`M ${espX - 15} ${espY + 28} C ${espX - 70} ${espY - 15}, ${bhX + 20} ${bhY + 50}, ${bhX + 4} ${bhY + 34}`}
+                fill="none"
+                stroke="#38BDF8"
+                strokeWidth={activePartId === 'wiring' || activePartId === 'bh1750' ? 2.5 : 1.5}
+              />
+
+              {/* (D) 3.3V POWER WIRE (Red): ESP32 3V3 -> All Modules */}
+              <path
+                d={`M ${espX - 45} ${espY + 28} C ${espX - 70} ${espY + 40}, ${oledX + 40} ${oledY + 45}, ${oledX + 15} ${oledY + 48}`}
+                fill="none"
+                stroke="#EF4444"
+                strokeWidth={activePartId === 'wiring' ? 2.5 : 1.5}
+              />
+              <path
+                d={`M ${espX - 45} ${espY + 28} C ${espX - 90} ${espY - 30}, ${bhX + 10} ${bhY + 40}, ${bhX - 10} ${bhY + 34}`}
+                fill="none"
+                stroke="#EF4444"
+                strokeWidth={activePartId === 'wiring' || activePartId === 'bh1750' ? 2.5 : 1.5}
+              />
+
+              {/* (E) MOTOR DRIVE WIRE (Green): ESP32 GPIO25 -> Transistor Driver */}
+              <path
+                d={`M ${espX + 15} ${espY + 28} C ${espX + 30} ${espY + 60}, ${motX - 40} ${motY - 10}, ${motX - 15} ${motY + 12}`}
+                fill="none"
+                stroke="#10B981"
+                strokeWidth={activePartId === 'motor' ? 2.5 : 1.5}
+              />
             </g>
 
-            {/* 05: Haptic ERM Vibration Motor */}
+            {/* ==================================================== */}
+            {/* 3. PART 01: MONITOR BEZEL CLIP-ON ENCLOSURE          */}
+            {/* ==================================================== */}
             <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[4]) - 255})`}
-              onClick={() => setActivePartId('motor')}
+              id="part-clip"
+              transform={`translate(0, ${clipY - 210})`}
+              onClick={() => setActivePartId('clip')}
               style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
+              filter={activePartId === 'clip' ? 'url(#glowHighlight)' : 'none'}
             >
-              <circle cx="340" cy="255" r="16" fill="#D1D5DB" stroke={activePartId === 'motor' ? '#EF4444' : '#6B7280'} strokeWidth={activePartId === 'motor' ? 2.5 : 1.5} />
-              <circle cx="340" cy="255" r="9" fill="#9CA3AF" />
-              <path d="M 330 255 Q 340 245 350 255" stroke="#374151" strokeWidth="1.5" fill="none" />
-              <text x="340" y="279" textAnchor="middle" fill="#4B5563" fontSize="8" fontFamily="monospace">ERM 10mm</text>
+              {/* Clip Housing Gripping the Laptop Top Bezel */}
+              <rect x="325" y="196" width="110" height="26" rx="4" fill="#0F172A" stroke="#334155" strokeWidth="1.5" />
+              {/* Front lip clamping down screen */}
+              <path d="M 335,222 L 345,232 L 415,232 L 425,222 Z" fill="#1E293B" stroke="#0F172A" strokeWidth="1" />
+              {/* Label */}
+              <text x="380" y="212" textAnchor="middle" fill="#94A3B8" fontSize="8" fontFamily="monospace" fontWeight="bold">
+                MONITOR BAR CLIP
+              </text>
             </g>
 
-            {/* 04: ESP32-WROOM-32 Core */}
+            {/* ==================================================== */}
+            {/* 4. PART 02: 0.96" OLED DISPLAY (128x64 SSD1306)      */}
+            {/* ==================================================== */}
             <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[3]) - 245})`}
-              onClick={() => setActivePartId('esp32')}
-              style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
-            >
-              <rect x="130" y="220" width="200" height="52" rx="4" fill="#1E293B" stroke={activePartId === 'esp32' ? '#0F766E' : '#334155'} strokeWidth={activePartId === 'esp32' ? 2.5 : 1.2} />
-              <rect x="145" y="226" width="70" height="38" rx="2" fill="#94A3B8" />
-              <text x="180" y="247" textAnchor="middle" fill="#0F172A" fontSize="9" fontFamily="monospace" fontWeight="bold">ESP32</text>
-              <text x="180" y="257" textAnchor="middle" fill="#334155" fontSize="7" fontFamily="monospace">TinyML RF</text>
-              {/* Gold Chip Antenna */}
-              <rect x="290" y="226" width="30" height="38" fill="#F59E0B" rx="1" />
-            </g>
-
-            {/* 03: BH1750 Ambient Light Photometer */}
-            <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[2]) - 232})`}
-              onClick={() => setActivePartId('bh1750')}
-              style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
-            >
-              <rect x="290" y="215" width="54" height="32" rx="3" fill="#1E40AF" stroke={activePartId === 'bh1750' ? '#F59E0B' : '#1D4ED8'} strokeWidth={activePartId === 'bh1750' ? 2.5 : 1} />
-              <circle cx="317" cy="231" r="5" fill="#FEF08A" stroke="#CA8A04" strokeWidth="1" />
-              <text x="317" y="243" textAnchor="middle" fill="#DBEAFE" fontSize="7" fontFamily="monospace">BH1750</text>
-            </g>
-
-            {/* 02: 0.96" SSD1306 Monochrome OLED */}
-            <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[1]) - 225})`}
+              id="part-oled"
+              transform={`translate(${oledX - 380}, ${oledY - 188})`}
               onClick={() => setActivePartId('oled')}
               style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
+              filter={activePartId === 'oled' ? 'url(#glowHighlight)' : 'url(#shadowFilter)'}
             >
-              <rect x="110" y="195" width="130" height="60" rx="3" fill="#0F172A" stroke={activePartId === 'oled' ? '#10B981' : '#1E293B'} strokeWidth={activePartId === 'oled' ? 2.5 : 1.2} />
-              {/* OLED active screen display */}
-              <rect x="120" y="205" width="110" height="40" rx="1" fill="#000000" stroke="#374151" strokeWidth="0.8" />
-              <text x="125" y="218" fill="#10B981" fontSize="7" fontFamily="monospace">STRESS: [|||... ]</text>
-              <text x="125" y="228" fill="#10B981" fontSize="7" fontFamily="monospace">CONF: 84% • LINK OK</text>
-              <text x="125" y="238" fill="#10B981" fontSize="7" fontFamily="monospace">128x64 SSD1306</text>
+              {/* Outer Enclosure Frame */}
+              <rect x="315" y="158" width="130" height="64" rx="4" fill="#0F172A" stroke={activePartId === 'oled' ? '#10B981' : '#334155'} strokeWidth={activePartId === 'oled' ? 2.5 : 1.5} />
+              {/* OLED Screen Area (Glowing Blue/Cyan) */}
+              <rect x="325" y="166" width="110" height="48" rx="2" fill="#030712" stroke="#1F2937" strokeWidth="1" />
+              {/* Glowing Pixel Display Text matching Image 4 ("StressKB Ready") */}
+              <text x="380" y="184" textAnchor="middle" fill="#38BDF8" fontSize="10" fontWeight="bold" fontFamily="monospace">
+                StressKB
+              </text>
+              <text x="380" y="196" textAnchor="middle" fill="#38BDF8" fontSize="10" fontWeight="bold" fontFamily="monospace">
+                Ready
+              </text>
+              <text x="380" y="208" textAnchor="middle" fill="#10B981" fontSize="7" fontFamily="monospace">
+                [||||......] CAL:OK
+              </text>
+
+              {/* Pin Header at bottom of OLED */}
+              <g transform="translate(350, 222)">
+                <rect x="0" y="0" width="60" height="6" fill="#F59E0B" />
+                <circle cx="6" cy="3" r="1.5" fill="#1E293B" />
+                <circle cx="22" cy="3" r="1.5" fill="#1E293B" />
+                <circle cx="38" cy="3" r="1.5" fill="#1E293B" />
+                <circle cx="54" cy="3" r="1.5" fill="#1E293B" />
+              </g>
+              {progress > 0.25 && (
+                <text x="380" y="152" textAnchor="middle" fill="#10B981" fontSize="9" fontFamily="monospace" fontWeight="bold">
+                  OLED (128x64 I2C)
+                </text>
+              )}
             </g>
 
-            {/* 01: Acrylic Top Enclosure (Smoked Translucent) */}
+            {/* ==================================================== */}
+            {/* 5. PART 03: BH1750 AMBIENT LIGHT SENSOR              */}
+            {/* ==================================================== */}
             <g
-              transform={`translate(0, ${getPartY(HARDWARE_PARTS[0]) - 210})`}
-              onClick={() => setActivePartId('acrylic')}
+              id="part-bh1750"
+              transform={`translate(${bhX - 380}, ${bhY - 142})`}
+              onClick={() => setActivePartId('bh1750')}
               style={{ cursor: 'pointer' }}
-              filter="url(#partGlow)"
+              filter={activePartId === 'bh1750' ? 'url(#glowHighlight)' : 'url(#shadowFilter)'}
             >
-              <rect x="40" y="170" width="380" height="80" rx="6" fill="rgba(31, 41, 55, 0.45)" stroke={activePartId === 'acrylic' ? '#3B82F6' : 'rgba(75, 85, 99, 0.8)'} strokeWidth={activePartId === 'acrylic' ? 2.5 : 1.5} />
-              {/* Optical photometer window */}
-              <circle cx="317" cy="210" r="10" fill="rgba(255, 255, 255, 0.7)" stroke="#3B82F6" strokeWidth="1" />
-              {/* OLED viewport cut */}
-              <rect x="105" y="185" width="140" height="50" rx="2" fill="none" stroke="rgba(255, 255, 255, 0.5)" strokeWidth="1" strokeDasharray="2,2" />
-              {/* M3 Screw holes */}
-              <circle cx="55" cy="182" r="3.5" fill="#E5E7EB" stroke="#4B5563" strokeWidth="1" />
-              <circle cx="405" cy="182" r="3.5" fill="#E5E7EB" stroke="#4B5563" strokeWidth="1" />
-              <circle cx="55" cy="238" r="3.5" fill="#E5E7EB" stroke="#4B5563" strokeWidth="1" />
-              <circle cx="405" cy="238" r="3.5" fill="#E5E7EB" stroke="#4B5563" strokeWidth="1" />
-              <text x="48" y="215" fill="#F3F4F6" fontSize="8" fontFamily="monospace">M3 TOP PLATE</text>
+              {/* Blue GY-302 Breakout PCB */}
+              <rect x="356" y="122" width="48" height="38" rx="3" fill="#1E40AF" stroke={activePartId === 'bh1750' ? '#F59E0B' : '#3B82F6'} strokeWidth={activePartId === 'bh1750' ? 2.5 : 1.2} />
+              {/* Photodiode Sensor Chip (Yellow Optical Window) */}
+              <circle cx="380" cy="138" r="6" fill="#FEF08A" stroke="#CA8A04" strokeWidth="1.2" />
+              <circle cx="380" cy="138" r="2.5" fill="#713F12" />
+              <text x="380" y="154" textAnchor="middle" fill="#DBEAFE" fontSize="6.5" fontFamily="monospace" fontWeight="bold">
+                BH1750
+              </text>
+              {/* 5 Pin Solder Header on bottom */}
+              <g transform="translate(362, 160)">
+                {[...Array(5)].map((_, i) => (
+                  <circle key={`pin-${i}`} cx={i * 9} cy="0" r="1.8" fill="#F59E0B" />
+                ))}
+              </g>
+              {progress > 0.2 && (
+                <text x="380" y="114" textAnchor="middle" fill="#F59E0B" fontSize="9" fontFamily="monospace" fontWeight="bold">
+                  BH1750 LIGHT SENSOR
+                </text>
+              )}
+            </g>
+
+            {/* ==================================================== */}
+            {/* 6. PART 04: ESP32-WROOM-32 MICROCONTROLLER            */}
+            {/* ==================================================== */}
+            <g
+              id="part-esp32"
+              transform={`translate(${espX - 380}, ${espY - 188})`}
+              onClick={() => setActivePartId('esp32')}
+              style={{ cursor: 'pointer' }}
+              filter={activePartId === 'esp32' ? 'url(#glowHighlight)' : 'url(#shadowFilter)'}
+            >
+              {/* ESP32 Black Carrier PCB */}
+              <rect x="310" y="158" width="140" height="60" rx="4" fill="#0F172A" stroke={activePartId === 'esp32' ? '#0F766E' : '#334155'} strokeWidth={activePartId === 'esp32' ? 2.5 : 1.5} />
+              {/* Silver RF Metal Shield */}
+              <rect x="325" y="165" width="65" height="46" rx="2" fill="#CBD5E1" stroke="#94A3B8" strokeWidth="1" />
+              <text x="357" y="186" textAnchor="middle" fill="#0F172A" fontSize="7.5" fontWeight="bold" fontFamily="monospace">
+                ESP32
+              </text>
+              <text x="357" y="196" textAnchor="middle" fill="#334155" fontSize="6.5" fontFamily="monospace">
+                TinyML Core
+              </text>
+              {/* Micro-USB Port on side */}
+              <rect x="310" y="180" width="10" height="16" rx="1.5" fill="#64748B" stroke="#475569" strokeWidth="1" />
+              {/* Gold PCB Antenna Trace */}
+              <rect x="400" y="165" width="22" height="46" rx="1" fill="#F59E0B" stroke="#D97706" strokeWidth="0.8" />
+              <path d="M 404,170 H 418 V 176 H 404 V 182 H 418 V 188 H 404 V 194 H 418" fill="none" stroke="#78350F" strokeWidth="1" />
+              {/* Status LEDs */}
+              <circle cx="395" cy="172" r="2" fill="#EF4444" />
+              <circle cx="395" cy="180" r="2" fill="#3B82F6" />
+
+              {/* Pin Headers Top and Bottom */}
+              <g transform="translate(325, 154)">
+                {[...Array(12)].map((_, i) => (
+                  <rect key={`esp-t-${i}`} x={i * 9} y="0" width="4" height="4" fill="#E2E8F0" />
+                ))}
+              </g>
+              <g transform="translate(325, 218)">
+                {[...Array(12)].map((_, i) => (
+                  <rect key={`esp-b-${i}`} x={i * 9} y="0" width="4" height="4" fill="#E2E8F0" />
+                ))}
+              </g>
+              {progress > 0.25 && (
+                <text x="380" y="148" textAnchor="middle" fill="#0F766E" fontSize="9" fontFamily="monospace" fontWeight="bold">
+                  ESP32 (BEHIND DISPLAY)
+                </text>
+              )}
+            </g>
+
+            {/* ==================================================== */}
+            {/* 7. PART 05: HAPTIC VIBRATION MOTOR & DRIVER          */}
+            {/* ==================================================== */}
+            <g
+              id="part-motor"
+              transform={`translate(${motX - 380}, ${motY - 210})`}
+              onClick={() => setActivePartId('motor')}
+              style={{ cursor: 'pointer' }}
+              filter={activePartId === 'motor' ? 'url(#glowHighlight)' : 'url(#shadowFilter)'}
+            >
+              {/* Transistor / Prototyping PCB Driver Board */}
+              <rect x="340" y="196" width="36" height="30" rx="2" fill="#047857" stroke="#065F46" strokeWidth="1" />
+              {/* BC547 Transistor */}
+              <rect x="348" y="202" width="12" height="10" rx="1" fill="#1F2937" />
+              <circle cx="354" cy="207" r="2" fill="#D1D5DB" />
+              <text x="358" y="222" textAnchor="middle" fill="#A7F3D0" fontSize="5.5" fontFamily="monospace">BC547</text>
+
+              {/* 10mm Silver Coin Vibration Motor */}
+              <circle cx="395" cy="211" r="14" fill="#E2E8F0" stroke={activePartId === 'motor' ? '#EF4444' : '#64748B'} strokeWidth={activePartId === 'motor' ? 2 : 1.2} />
+              <circle cx="395" cy="211" r="8" fill="#CBD5E1" />
+              <circle cx="395" cy="211" r="3" fill="#94A3B8" />
+              {/* Vibration arcs */}
+              {progress > 0.3 && (
+                <path d="M 412,204 A 12,12 0 0,1 412,218" fill="none" stroke="#EF4444" strokeWidth="1.5" strokeLinecap="round" />
+              )}
+              {progress > 0.25 && (
+                <text x="380" y="240" textAnchor="middle" fill="#EF4444" fontSize="8.5" fontFamily="monospace" fontWeight="bold">
+                  ERM MOTOR (BASE)
+                </text>
+              )}
             </g>
           </svg>
         </div>
 
-        {/* Right: Technical Part Callouts */}
+        {/* Right: Technical Part Cards List (Matches Reference Images) */}
         <div className={styles.partsList}>
           {HARDWARE_PARTS.map((part) => {
             const isActive = part.id === activePartId;
@@ -329,7 +625,7 @@ export function HardwareExplodedView() {
       </div>
 
       <div className={styles.statusCaption}>
-        Focused Component: <strong>{activePart.name}</strong> ({activePart.pinout})
+        Active Inspection: <strong>{activePart.name}</strong> &bull; {activePart.pinout}
       </div>
     </section>
   );
