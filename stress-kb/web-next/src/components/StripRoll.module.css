@@ -99,6 +99,106 @@
   color: var(--color-ink-faint);
 }
 
+/* Stress axis levels */
+.axisLevels {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.axisLevelHigh {
+  color: var(--color-level-high);
+  font-weight: 700;
+}
+
+.axisLevelMed {
+  color: #B57B0E;
+  font-weight: 700;
+}
+
+.axisLevelLow {
+  color: var(--color-level-low);
+  font-weight: 700;
+}
+
+/* Legend row */
+.legendRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background-color: rgba(228, 235, 231, 0.7);
+  border-bottom: var(--border-rule);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatchLow {
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-level-low);
+  border: 1px solid var(--color-level-low);
+}
+
+.swatchMed {
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-level-med);
+  border: 1px dashed #8C5F05;
+}
+
+.swatchHigh {
+  width: 10px;
+  height: 10px;
+  background-color: var(--color-level-high);
+  border: 1px solid var(--color-level-high);
+}
+
+.swatchAlert {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 10px;
+  color: var(--color-level-high);
+}
+
+.swatchPause {
+  width: 12px;
+  height: 8px;
+  background-color: rgba(16, 39, 43, 0.08);
+  border: 1px solid var(--color-grid);
+}
+
+.swatchError {
+  width: 2px;
+  height: 10px;
+  background-color: var(--color-level-high);
+}
+
+.selfReportGapBadge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-ink);
+  background-color: rgba(16, 39, 43, 0.06);
+  padding: 2px 8px;
+  border-radius: var(--radius-instrument);
+  border: var(--border-rule);
+}
+
 /* Right SVG Graphic Track */
 .svgCanvas {
   display: block;

@@ -18,6 +18,35 @@ export function StripRoll({ session }) {
     return deriveTimeSeriesChannels(session);
   }, [session]);
 
+  const selfReportInfo = useMemo(() => {
+    if (!session?.selfreport || typeof session.selfreport.stress !== 'number') return null;
+    const rating = session.selfreport.stress;
+    const reportedLevel = rating >= 4 ? 'High' : (rating === 3 ? 'Medium' : 'Low');
+    const reportedH = rating >= 4 ? 62 : (rating === 3 ? 42 : 20);
+
+    const validStress = data.stress.filter(w => w.valid === 1);
+    const avgCls = validStress.length > 0
+      ? (validStress.reduce((acc, w) => acc + w.cls, 0) / validStress.length)
+      : 0;
+    const modelLevel = avgCls >= 1.5 ? 'High' : (avgCls >= 0.5 ? 'Medium' : 'Low');
+    const modelH = avgCls >= 1.5 ? 62 : (avgCls >= 0.5 ? 42 : 20);
+
+    const agrees = reportedLevel === modelLevel;
+    const sentence = agrees
+      ? `Self-report matches model (${modelLevel}).`
+      : `Self-report gap: you reported ${reportedLevel} while model estimated ${modelLevel}.`;
+
+    return {
+      rating,
+      reportedLevel,
+      reportedH,
+      modelLevel,
+      modelH,
+      hasGap: !agrees,
+      sentence
+    };
+  }, [session, data.stress]);
+
   const totalDuration = data.durationSeconds;
   // Pixels per second for paper tape roll (e.g. 5px per sec -> 300s = 1500px)
   const pxPerSec = 5;
@@ -204,6 +233,43 @@ export function StripRoll({ session }) {
         </div>
       </div>
 
+      {/* Visible Alert & Channel Legend Key */}
+      <div className={styles.legendRow}>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchLow} />
+          <span>Low</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchMed} />
+          <span>Medium</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchHigh} />
+          <span>High</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchAlert}>!</span>
+          <span>Vibration Alert</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600, color: 'var(--color-ink)' }}>F</span>
+          <span>Pattern Flag</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchPause} />
+          <span>Pause (&gt;2s)</span>
+        </div>
+        <div className={styles.legendItem}>
+          <span className={styles.swatchError} />
+          <span>Error / Backspace</span>
+        </div>
+        {selfReportInfo && (
+          <div className={styles.selfReportGapBadge}>
+            {selfReportInfo.sentence}
+          </div>
+        )}
+      </div>
+
       {showTable ? (
         /* Accessible Semantic Table View */
         <div className={styles.tableContainer}>
@@ -252,7 +318,11 @@ export function StripRoll({ session }) {
             </div>
             <div className={styles.channelLabelCell} style={{ height: hStress }}>
               <span>Stress</span>
-              <span className={styles.channelUnit}>stepped</span>
+              <div className={styles.axisLevels}>
+                <span className={styles.axisLevelHigh}>High</span>
+                <span className={styles.axisLevelMed}>Med</span>
+                <span className={styles.axisLevelLow}>Low</span>
+              </div>
             </div>
             <div className={styles.channelLabelCell} style={{ height: hSpeed }}>
               <span>Speed</span>
@@ -357,6 +427,38 @@ export function StripRoll({ session }) {
             {/* --- 2. STRESS CHANNEL --- */}
             <g transform={`translate(0, ${hTime})`}>
               <line x1="0" y1={hStress} x2={rollWidth} y2={hStress} stroke="var(--color-grid)" strokeWidth="1" />
+              {/* Horizontal axis guidelines */}
+              <line x1="0" y1={hStress - 20} x2={rollWidth} y2={hStress - 20} stroke="var(--color-grid)" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6" />
+              <line x1="0" y1={hStress - 42} x2={rollWidth} y2={hStress - 42} stroke="var(--color-grid)" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6" />
+              <line x1="0" y1={hStress - 62} x2={rollWidth} y2={hStress - 62} stroke="var(--color-grid)" strokeWidth="0.8" strokeDasharray="2 4" opacity="0.6" />
+              <text x="4" y={hStress - 22} fontSize="8" fontFamily="var(--font-mono)" fill="var(--color-level-low)" opacity="0.8">Low</text>
+              <text x="4" y={hStress - 44} fontSize="8" fontFamily="var(--font-mono)" fill="#B57B0E" opacity="0.8">Med</text>
+              <text x="4" y={hStress - 64} fontSize="8" fontFamily="var(--font-mono)" fill="var(--color-level-high)" opacity="0.8">High</text>
+
+              {/* Self-report gap overlay if present */}
+              {selfReportInfo && selfReportInfo.hasGap && (
+                <g>
+                  <rect
+                    x="0"
+                    y={Math.min(hStress - selfReportInfo.reportedH, hStress - selfReportInfo.modelH)}
+                    width={rollWidth}
+                    height={Math.abs(selfReportInfo.reportedH - selfReportInfo.modelH)}
+                    fill="rgba(16, 39, 43, 0.06)"
+                    stroke="#10272B"
+                    strokeWidth="0.8"
+                    strokeDasharray="3 3"
+                  />
+                  <line
+                    x1="0"
+                    y1={hStress - selfReportInfo.reportedH}
+                    x2={rollWidth}
+                    y2={hStress - selfReportInfo.reportedH}
+                    stroke="#10272B"
+                    strokeWidth="1.2"
+                    strokeDasharray="4 2"
+                  />
+                </g>
+              )}
 
               {data.stress.map((w) => {
                 const x1 = xScale(w.tStartS);

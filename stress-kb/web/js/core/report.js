@@ -161,20 +161,25 @@ export function parseAndAnalyzeSession(session) {
   // 4. Indicator Table (all 18 features)
   const indicatorTable = [];
   if (validCount > 0) {
+    const rawSums = new Array(18).fill(0);
     const featureSums = new Array(18).fill(0);
     for (const w of validWindows) {
-      const tf = transformFeatures(w.f || new Array(18).fill(0));
+      const raw = w.f || new Array(18).fill(0);
+      const tf = transformFeatures(raw);
       for (let i = 0; i < 18; i++) {
+        rawSums[i] += (raw[i] || 0);
         featureSums[i] += tf[i];
       }
     }
 
     for (let i = 0; i < 18; i++) {
-      const rawMean = featureSums[i] / validCount;
+      // For display, features 16 (lux_mean) and 17 (lux_std) show raw lux, not log-transformed
+      const rawMean = (i === 16 || i === 17) ? (rawSums[i] / validCount) : (featureSums[i] / validCount);
+      const tfMean = featureSums[i] / validCount;
       const mu = baselineMu[i] ?? 0;
       const sd = baselineSd[i] ?? 1;
       const sdEff = Math.max(sd, 0.1 * Math.abs(mu), 0.001);
-      const zScore = Math.min(5, Math.max(-5, (rawMean - mu) / sdEff));
+      const zScore = Math.min(5, Math.max(-5, (tfMean - mu) / sdEff));
 
       let arrow = '→';
       let direction = 'flat';

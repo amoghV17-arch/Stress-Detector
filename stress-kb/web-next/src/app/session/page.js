@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import styles from './page.module.css';
 import { useSession } from '@/context/SessionContext';
 import { generateParticipantSchedule } from '@core/schedule.js';
@@ -84,7 +85,12 @@ export default function OperatorSetupPage() {
     <main className={styles.container}>
       {/* Header */}
       <header className={styles.header}>
-        <div className={styles.breadcrumb}>StressKB &rarr; Operator Setup</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+          <div className={styles.breadcrumb}>StressKB &rarr; Operator Setup</div>
+          <Link href="/report" className={styles.btnSecondary} style={{ textDecoration: 'none', fontSize: '12px', padding: '4px 10px' }}>
+            Report Viewer &rarr;
+          </Link>
+        </div>
         <h1 className={styles.title}>Set up a session</h1>
         <p className={styles.subtitle}>
           Configure participant parameters, verify hardware connection, and hand over the keyboard for data collection.
