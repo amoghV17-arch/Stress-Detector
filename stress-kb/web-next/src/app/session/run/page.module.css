@@ -46,6 +46,23 @@
   border-color: var(--color-ink);
 }
 
+.finishButton {
+  background: var(--color-ink);
+  color: #ffffff;
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-instrument);
+  padding: 6px 14px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.finishButton:hover {
+  background-color: #2a5a52;
+}
+
 .statusGroup {
   display: flex;
   align-items: center;

@@ -49,6 +49,7 @@ export class TypingEngine {
 
   start(timestampMs) {
     this.startTime = timestampMs;
+    this.startEpochTime = Date.now();
     this.isActive = true;
     this.seq = 0;
     this.cursor = 0;
@@ -267,7 +268,8 @@ export class TypingEngine {
    * @returns {Object} Validated session JSON (never contains typed text)
    */
   exportSessionJSON(options = {}) {
-    const elapsedS = this.startTime !== null ? Math.round((Date.now() - this.startTime) / 1000) : 0;
+    const elapsedS = this.startEpochTime ? Math.max(0, Math.round((Date.now() - this.startEpochTime) / 1000)) : (this.startTime !== null ? Math.round((Date.now() - this.startTime) / 1000) : 0);
+    const startedIso = this.startEpochTime ? new Date(this.startEpochTime).toISOString() : (this.startTime ? new Date(this.startTime).toISOString() : new Date().toISOString());
 
     const uncorrectedErrors = Math.max(0, this.errorCount); // uncorrected errors count
 
@@ -281,7 +283,7 @@ export class TypingEngine {
         condition: this.condition,
         lighting: this.lighting,
         has_light_sensor: options.has_light_sensor ?? true,
-        started_iso: this.startTime ? new Date(this.startTime).toISOString() : new Date().toISOString(),
+        started_iso: startedIso,
         fw_version: options.fw_version ?? '0.1',
         app_version: '1.0'
       },

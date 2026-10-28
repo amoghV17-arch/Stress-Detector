@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import { getSerialManager } from '@/lib/serial';
 import { SessionRecorder } from '@/lib/sessionRecorder';
+import { saveSessionToArchive } from '@/lib/sessionArchive';
 
 const SessionContext = createContext(null);
 
@@ -139,6 +140,11 @@ export function SessionProvider({ children }) {
         setLastCompletedSession(sessionJSON);
         setIsSessionActive(false);
         setActiveRecorder(null);
+
+        // Auto-archive in background
+        saveSessionToArchive(sessionJSON).catch((err) => {
+          console.warn('Failed to auto-archive session:', err);
+        });
 
         // If CAL mode, record pace for pressure time calculations
         if (config.mode === 'CAL') {

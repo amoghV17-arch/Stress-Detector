@@ -72,6 +72,9 @@ function TypingSessionContent() {
           setShowSelfReportModal(true);
         }
       },
+      onFinish: () => {
+        setShowSelfReportModal(true);
+      },
     });
 
     sessionRecorderRef.current = recorder;
@@ -159,7 +162,9 @@ function TypingSessionContent() {
 
   // Finish session with self-report
   const handleSaveSelfReport = () => {
-    session.stopSession({ selfreport: selfReport });
+    try {
+      session.stopSession({ selfreport: selfReport });
+    } catch (_) {}
     setShowSelfReportModal(false);
     router.push('/report');
   };
@@ -244,13 +249,22 @@ function TypingSessionContent() {
     >
       {/* Top Header Bar */}
       <header className={styles.topBar}>
-        <button
-          className={styles.quitButton}
-          onClick={() => setShowQuitModal(true)}
-          title="Press Esc to quit"
-        >
-          [Esc] Quit
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            className={styles.quitButton}
+            onClick={() => setShowQuitModal(true)}
+            title="Press Esc to quit"
+          >
+            [Esc] Quit
+          </button>
+          <button
+            className={styles.finishButton}
+            onClick={() => setShowSelfReportModal(true)}
+            title="Finish session and generate biometric report"
+          >
+            Finish & View Report →
+          </button>
+        </div>
 
         <div className={styles.statusGroup}>
           {condition === 'pressure' ? (
@@ -268,6 +282,40 @@ function TypingSessionContent() {
       {condition === 'pressure' && (
         <div className={styles.timerTrack}>
           <div className={styles.timerProgress} style={{ width: `${timerPercent}%` }} />
+        </div>
+      )}
+
+      {/* Time Expired Notice Banner */}
+      {remainingSeconds <= 0 && condition === 'pressure' && (
+        <div style={{
+          backgroundColor: '#effaf5',
+          border: '1px solid #27ab83',
+          color: '#144a39',
+          padding: '12px 20px',
+          borderRadius: '4px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: '16px',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
+          <span>⏱️ Session duration complete! Biometric data recorded.</span>
+          <button
+            onClick={() => setShowSelfReportModal(true)}
+            style={{
+              backgroundColor: '#1b3b36',
+              color: '#ffffff',
+              border: 'none',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: '600',
+              fontFamily: 'inherit'
+            }}
+          >
+            View Clinical Report →
+          </button>
         </div>
       )}
 

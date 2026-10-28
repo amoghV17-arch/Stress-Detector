@@ -58,18 +58,19 @@ export class SessionRecorder {
           this.liveScore = 0;
         }
 
+        const isComplete = p.cursor >= p.total || this.remainingSeconds <= 0;
         this.onProgress({
           cursor: p.cursor,
           total: p.total,
           correct: p.correct,
           errors: p.errors,
           score: this.liveScore,
-          remainingSeconds: this.remainingSeconds,
+          remainingSeconds: Math.max(0, this.remainingSeconds),
           durationSeconds: this.sessionDurationSeconds,
-          isComplete: p.cursor >= p.total,
+          isComplete,
         });
 
-        if (p.cursor >= p.total) {
+        if (isComplete) {
           this.stop();
         }
       },
@@ -133,18 +134,19 @@ export class SessionRecorder {
         this.countdownTimer = setInterval(() => {
           if (!this.isActive) return;
           this.remainingSeconds--;
+          const isZero = this.remainingSeconds <= 0;
           this.onProgress({
             cursor: this.engine.cursor,
             total: this.targetText.length,
             correct: this.engine.correctCount,
             errors: this.engine.errorCount,
             score: this.liveScore,
-            remainingSeconds: this.remainingSeconds,
+            remainingSeconds: Math.max(0, this.remainingSeconds),
             durationSeconds: this.sessionDurationSeconds,
-            isComplete: false,
+            isComplete: isZero,
           });
 
-          if (this.remainingSeconds <= 0) {
+          if (isZero) {
             this.stop();
           }
         }, 1000);
