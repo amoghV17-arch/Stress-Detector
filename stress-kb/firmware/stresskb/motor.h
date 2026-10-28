@@ -88,10 +88,14 @@ public:
 #endif
     }
 
-    void trigger(MotorPattern pattern, unsigned long nowMillis) {
+    void trigger(MotorPattern pattern, unsigned long nowMillis = 0) {
         if (!isPresent_ || pattern == MotorPattern::NONE) return;
         currentPattern_ = pattern;
+#ifdef ARDUINO
+        patternStartMillis_ = (nowMillis == 0) ? millis() : nowMillis;
+#else
         patternStartMillis_ = nowMillis;
+#endif
         applyDuty(getMotorDutyAtTime(pattern, 0));
     }
 

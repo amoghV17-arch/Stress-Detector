@@ -238,7 +238,7 @@ private:
             uint32_t iki = curr.t - prev.t;
             if (iki <= 2000 && prev.dwell > 0) {
                 overlapPairs++;
-                if (curr.t < prev.t + std::min(2000u, prev.dwell)) {
+                if (curr.t < prev.t + std::min<uint32_t>(2000u, prev.dwell)) {
                     overlapCount++;
                 }
             }
@@ -298,7 +298,7 @@ private:
             if (kWin[i].err == 1) {
                 double gapSum = 0.0;
                 size_t gapCount = 0;
-                for (size_t j = i + 1; j < std::min(nKeys, i + 4); j++) {
+                for (size_t j = i + 1; j < std::min<size_t>((size_t)nKeys, i + 4); j++) {
                     uint32_t gap = kWin[j].t - kWin[j - 1].t;
                     if (gap <= 2000) {
                         gapSum += gap;

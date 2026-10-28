@@ -107,7 +107,7 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
 
         // Trigger motor vibration alert on alert condition
         if (dec.alert) {
-            motor.trigger(MotorPattern::DOUBLE);
+            motor.trigger(MotorPattern::DOUBLE, millis());
         }
 
         // Emit PRED line per PROTOCOL.md:
@@ -134,11 +134,9 @@ void onWindowClosed(const WindowFeatures& wf, void* /*userData*/) {
             displayData.totalKeys = wf.nKeys;
         } else {
             displayData.screen = ScreenType::MAIN;
-            if (inf.cls == 0) displayData.level = StressLevel::LOW;
-            else if (inf.cls == 1) displayData.level = StressLevel::MEDIUM;
-            else displayData.level = StressLevel::HIGH;
-            displayData.confidence = std::max(inf.p[0], std::max(inf.p[1], inf.p[2]));
-            displayData.topFlag = dec.flags;
+            displayData.stressLevel = inf.cls; // 0: Low, 1: Med, 2: High
+            displayData.confidence = std::max<float>(inf.p[0], std::max<float>(inf.p[1], inf.p[2]));
+            displayData.patternFlags = dec.flags;
         }
     }
     display.render(displayData);
