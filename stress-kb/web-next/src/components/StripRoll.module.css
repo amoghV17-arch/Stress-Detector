@@ -1,0 +1,207 @@
+.rollWrapper {
+  width: 100%;
+  margin: 24px 0 32px 0;
+  border: var(--border-rule);
+  background-color: var(--color-paper);
+  border-radius: var(--radius-instrument);
+  position: relative;
+  overflow: hidden;
+}
+
+.rollHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: rgba(185, 199, 193, 0.25);
+  border-bottom: var(--border-rule);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+.rollHeaderTitle {
+  font-weight: 600;
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rollControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btnToggle {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 4px 10px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btnToggle:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+/* Strip Roll Viewport */
+.scrollContainer {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  cursor: grab;
+  user-select: none;
+  background-image: var(--grid-pattern);
+  background-size: var(--grid-size);
+  outline: none;
+}
+
+.scrollContainer:active {
+  cursor: grabbing;
+}
+
+/* Left Sticky Channel Column */
+.channelLabelsColumn {
+  position: sticky;
+  left: 0;
+  z-index: 20;
+  width: 110px;
+  min-width: 110px;
+  background-color: var(--color-paper);
+  border-right: 1px solid var(--color-ink);
+  display: flex;
+  flex-direction: column;
+}
+
+.channelLabelCell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 10px;
+  border-bottom: var(--border-rule);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+  letter-spacing: 0.02em;
+}
+
+.channelUnit {
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--color-ink-faint);
+}
+
+/* Right SVG Graphic Track */
+.svgCanvas {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* Crosshair vertical line & readout */
+.crosshairLine {
+  stroke: var(--color-ink);
+  stroke-width: 1px;
+  stroke-dasharray: 3 3;
+  pointer-events: none;
+}
+
+.readoutCard {
+  position: absolute;
+  top: 48px;
+  right: 16px;
+  z-index: 30;
+  background-color: var(--color-paper);
+  border: var(--border-ink);
+  border-radius: var(--radius-instrument);
+  padding: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-ink);
+  box-shadow: 2px 2px 0px rgba(16, 39, 43, 0.1);
+  pointer-events: none;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.readoutItem {
+  display: flex;
+  gap: 6px;
+}
+
+.readoutLabel {
+  color: var(--color-ink-muted);
+}
+
+/* Pen draw-in animation */
+.penDraw {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: drawPen 1.8s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes drawPen {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .penDraw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Accessible Table View */
+.tableContainer {
+  padding: 16px;
+  overflow-x: auto;
+}
+
+.accessibleTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  text-align: left;
+}
+
+.accessibleTable th, .accessibleTable td {
+  padding: 8px 12px;
+  border: var(--border-rule);
+}
+
+.accessibleTable th {
+  background-color: rgba(185, 199, 193, 0.3);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+/* Notice Banners */
+.bannerSynthetic {
+  padding: 8px 16px;
+  background-color: rgba(217, 154, 30, 0.15);
+  border-bottom: 1px solid var(--color-level-med);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: #8C5F05;
+}
+
+.bannerWarning {
+  padding: 8px 16px;
+  background-color: rgba(216, 67, 43, 0.1);
+  border-bottom: 1px solid var(--color-level-high);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-level-high);
+}
