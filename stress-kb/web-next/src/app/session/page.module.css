@@ -1,0 +1,310 @@
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 80px 24px;
+}
+
+.header {
+  border-bottom: var(--border-rule);
+  padding-bottom: 20px;
+  margin-bottom: 32px;
+}
+
+.breadcrumb {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  margin-bottom: 8px;
+}
+
+.title {
+  font-family: var(--font-sans);
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  border: var(--border-rule);
+  background-color: var(--color-surface-translucent);
+  padding: 24px;
+  border-radius: var(--radius-instrument);
+}
+
+.cardTitle {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusIndicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: var(--radius-instrument);
+  border: var(--border-rule);
+}
+
+.statusDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.dotConnected {
+  background-color: var(--color-level-low);
+}
+
+.dotConnecting {
+  background-color: var(--color-level-med);
+}
+
+.dotDisconnected {
+  background-color: var(--color-level-high);
+}
+
+.formGroup {
+  margin-bottom: 16px;
+}
+
+.formLabel {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  margin-bottom: 6px;
+}
+
+.formInput, .formSelect {
+  width: 100%;
+  padding: 8px 12px;
+  border: var(--border-rule);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  border-radius: var(--radius-instrument);
+  outline: none;
+}
+
+.formInput:focus, .formSelect:focus {
+  border-color: var(--color-ink);
+}
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink);
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.btnPrimary {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-instrument);
+  padding: 9px 18px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.btnSecondary {
+  background: transparent;
+  color: var(--color-ink);
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 9px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  border-color: var(--color-ink);
+}
+
+.btnSecondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.checklist {
+  list-style: none;
+  margin-bottom: 24px;
+}
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--color-grid);
+}
+
+.checkIconSuccess {
+  color: var(--color-level-low);
+  font-weight: 700;
+}
+
+.checkIconPending {
+  color: var(--color-level-med);
+  font-weight: 700;
+}
+
+.startCard {
+  border: var(--border-ink);
+  background-color: var(--color-paper);
+  padding: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  border-radius: var(--radius-instrument);
+}
+
+@media (max-width: 640px) {
+  .startCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+.startInfoTitle {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 4px;
+}
+
+.startInfoDesc {
+  font-family: var(--font-serif);
+  font-size: 14px;
+  color: var(--color-ink-muted);
+}
+
+/* Device Log Paper Tape Drawer */
+.logDrawer {
+  border: var(--border-rule);
+  background-color: var(--color-paper);
+  border-radius: var(--radius-instrument);
+  overflow: hidden;
+}
+
+.logHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: rgba(185, 199, 193, 0.25);
+  border-bottom: var(--border-rule);
+  cursor: pointer;
+  user-select: none;
+}
+
+.logTitle {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tapeBody {
+  height: 220px;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  background-color: var(--color-paper);
+  background-image: var(--grid-pattern);
+  background-size: 12px 12px;
+}
+
+.logEntry {
+  display: flex;
+  gap: 8px;
+}
+
+.logTime {
+  color: var(--color-ink-faint);
+  min-width: 64px;
+}
+
+.logRx {
+  color: var(--color-level-low);
+}
+
+.logTx {
+  color: var(--color-ink);
+}
+
+.logWarn {
+  color: var(--color-level-high);
+  font-weight: 600;
+}
+
+.logSys {
+  color: var(--color-ink-muted);
+}
