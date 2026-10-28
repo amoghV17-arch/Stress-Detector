@@ -9,6 +9,7 @@ import { useSession } from '@/context/SessionContext';
 import { StripRoll } from '@/components/StripRoll';
 import normalSessionFixture from '../../../../web/tests/fixtures/normal_session.json';
 import syntheticSessionFixture from '../../../../web/tests/fixtures/synthetic_session.json';
+import lightSensorSessions from '@/lib/light_sensor_sessions.json';
 
 export default function SessionsArchivePage() {
   const router = useRouter();
@@ -21,7 +22,14 @@ export default function SessionsArchivePage() {
 
   const loadSessions = async () => {
     setIsLoading(true);
-    const list = await getAllArchivedSessions();
+    let list = await getAllArchivedSessions();
+    // Auto-seed light sensor sessions if archive is empty so user can explore them immediately
+    if (list.length === 0) {
+      for (const sess of lightSensorSessions) {
+        await saveSessionToArchive(sess);
+      }
+      list = await getAllArchivedSessions();
+    }
     setArchivedSessions(list);
     setIsLoading(false);
   };
@@ -30,8 +38,11 @@ export default function SessionsArchivePage() {
     loadSessions();
   }, []);
 
-  // Seed sample fixtures if archive is empty
+  // Seed sample fixtures + light sensor sessions
   const handleSeedSamples = async () => {
+    for (const sess of lightSensorSessions) {
+      await saveSessionToArchive(sess);
+    }
     await saveSessionToArchive(normalSessionFixture);
     await saveSessionToArchive(syntheticSessionFixture);
     await loadSessions();
@@ -175,6 +186,23 @@ export default function SessionsArchivePage() {
                         <span style={{ textTransform: 'capitalize' }}>
                           {s.mode} ({s.condition})
                         </span>
+                        {s.session?.meta?.has_light_sensor && (
+                          <span
+                            style={{
+                              marginLeft: '6px',
+                              fontSize: '11px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: '#eef2f0',
+                              border: '1px solid #bbf7d0',
+                              color: '#166534',
+                              fontWeight: 600,
+                            }}
+                            title={`Light sensor active (${s.session?.meta?.lighting || 'normal'})`}
+                          >
+                            ☀️ {s.session?.meta?.lighting || 'Light'}
+                          </span>
+                        )}
                       </td>
                       <td style={{ fontFamily: 'var(--font-mono)' }}>{s.durationSeconds} s</td>
 
