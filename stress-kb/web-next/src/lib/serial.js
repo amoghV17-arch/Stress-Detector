@@ -148,7 +148,7 @@ export class SerialManager {
           try {
             await this.port.setSignals({ dataTerminalReady: false, requestToSend: true });
             await new Promise((r) => setTimeout(r, 100));
-            await this.port.setSignals({ dataTerminalReady: true, requestToSend: false });
+            await this.port.setSignals({ dataTerminalReady: false, requestToSend: false });
           } catch (e) {
             console.warn('Could not set control signals:', e);
           }

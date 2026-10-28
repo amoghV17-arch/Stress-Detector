@@ -54,24 +54,33 @@ DisplayData displayData;
 // Window Engine
 WindowEngine windowEngine;
 
-// I2C bus scanner at boot
+// Fast I2C bus check at boot (targeted to BH1750 and SSD1306 to prevent 8s bare-board timeout)
 void scanI2CBus() {
-    Serial.println("I2C: Scanning bus (SDA=21, SCL=22)...");
-    byte count = 0;
-    for (byte addr = 1; addr < 127; addr++) {
-        Wire.beginTransmission(addr);
+#ifdef ARDUINO
+    Wire.setTimeOut(10);
+#endif
+    bool foundAny = false;
+
+    Wire.beginTransmission(I2C_ADDR_BH1750);
+    if (Wire.endTransmission() == 0) {
+        Serial.println("I2C: Found BH1750 at 0x23");
+        foundAny = true;
+    }
+
+    Wire.beginTransmission(I2C_ADDR_OLED);
+    if (Wire.endTransmission() == 0) {
+        Serial.println("I2C: Found SSD1306 OLED at 0x3C");
+        foundAny = true;
+    } else {
+        Wire.beginTransmission(0x3D);
         if (Wire.endTransmission() == 0) {
-            Serial.print("I2C: Device found at 0x");
-            if (addr < 16) Serial.print("0");
-            Serial.println(addr, HEX);
-            count++;
+            Serial.println("I2C: Found SSD1306 OLED at 0x3D");
+            foundAny = true;
         }
     }
-    if (count == 0) {
+
+    if (!foundAny) {
         Serial.println("I2C: No devices found (bare-board mode)");
-    } else {
-        Serial.print("I2C: Total devices found: ");
-        Serial.println(count);
     }
 }
 
@@ -191,9 +200,12 @@ void setup() {
     Serial.print(",");
     Serial.println(PROTOCOL_VERSION);
 
-    // Initialize I2C Wire bus
+    // Initialize I2C Wire bus with fast timeout
     Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
-    delay(50);
+#ifdef ARDUINO
+    Wire.setTimeOut(10);
+#endif
+    delay(10);
     scanI2CBus();
 
     // Initialize peripherals (non-blocking, tolerant of missing parts)
