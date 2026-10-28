@@ -1,0 +1,299 @@
+.pageContainer {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 32px 48px;
+  background-color: var(--color-paper);
+  background-image: var(--grid-pattern);
+  background-size: var(--grid-size);
+  color: var(--color-ink);
+  outline: none;
+}
+
+@media (max-width: 640px) {
+  .pageContainer {
+    padding: 20px;
+  }
+}
+
+/* Header bar */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: var(--border-rule);
+  padding-bottom: 16px;
+  font-family: var(--font-sans);
+}
+
+.quitButton {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 6px 12px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quitButton:hover {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  border-color: var(--color-ink);
+}
+
+.statusGroup {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.scoreBadge {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.timerBadge {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+}
+
+/* Depleting timer bar in pressure mode */
+.timerTrack {
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-grid);
+  margin-top: -1px;
+}
+
+.timerProgress {
+  height: 100%;
+  background-color: var(--color-ink);
+  transition: width 1s linear;
+}
+
+/* Main typing area */
+.centerContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 0;
+}
+
+.typingCard {
+  width: 100%;
+  max-width: 780px;
+  outline: none;
+  cursor: text;
+}
+
+.paragraphText {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  line-height: 1.65;
+  color: var(--color-ink);
+  user-select: none;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+  .paragraphText {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+}
+
+.charCorrect {
+  color: var(--color-ink);
+}
+
+.charCurrent {
+  color: var(--color-ink);
+  background-color: rgba(16, 39, 43, 0.12);
+  border-bottom: 2px solid var(--color-ink);
+}
+
+.charPending {
+  color: var(--color-ink-faint);
+}
+
+.charError {
+  color: var(--color-level-high);
+  border-bottom: 2px solid var(--color-level-high);
+}
+
+/* Footer info */
+.footerBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: var(--border-rule);
+  padding-top: 16px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ink-faint);
+}
+
+.progressInfo {
+  font-family: var(--font-mono);
+}
+
+/* Modals (Quit & Self-Report) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(16, 39, 43, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modalBox {
+  background-color: var(--color-paper);
+  border: var(--border-ink);
+  border-radius: var(--radius-instrument);
+  max-width: 480px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: none;
+}
+
+.modalTitle {
+  font-family: var(--font-sans);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+.modalDescription {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--color-ink-muted);
+  margin-bottom: 24px;
+}
+
+.sliderRow {
+  margin-bottom: 20px;
+}
+
+.sliderHeader {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin-bottom: 8px;
+}
+
+.sliderValue {
+  font-family: var(--font-mono);
+  color: var(--color-level-low);
+}
+
+.sliderInput {
+  width: 100%;
+  height: 6px;
+  accent-color: var(--color-ink);
+  cursor: pointer;
+}
+
+.sliderLabels {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-sans);
+  font-size: 11px;
+  color: var(--color-ink-faint);
+  margin-top: 4px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.buttonSecondary {
+  background: transparent;
+  border: var(--border-rule);
+  border-radius: var(--radius-instrument);
+  padding: 8px 16px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.buttonSecondary:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+}
+
+.buttonPrimary {
+  background-color: var(--color-ink);
+  color: var(--color-paper);
+  border: 1px solid var(--color-ink);
+  border-radius: var(--radius-instrument);
+  padding: 8px 18px;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.buttonPrimary:hover {
+  opacity: 0.9;
+}
+
+.consentCard {
+  background-color: var(--color-paper);
+  border: var(--border-rule);
+  padding: 32px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.consentCard h2 {
+  font-family: var(--font-sans);
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.consentCard p {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+  margin-bottom: 24px;
+}
+
+.consentCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+}
