@@ -22,9 +22,14 @@ public:
     bool begin() {
 #ifdef ARDUINO
         #if HAS_BH1750
-        Wire.beginTransmission(I2C_ADDR_BH1750);
+        uint8_t addr = I2C_ADDR_BH1750;
+        Wire.beginTransmission(addr);
+        if (Wire.endTransmission() != 0) {
+            addr = 0x5C; // Probe alternate address when ADDR is high/floating
+            Wire.beginTransmission(addr);
+        }
         if (Wire.endTransmission() == 0) {
-            if (bh1750_.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, I2C_ADDR_BH1750, &Wire)) {
+            if (bh1750_.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, addr, &Wire)) {
                 isPresent_ = true;
                 return true;
             }
