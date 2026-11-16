@@ -212,7 +212,6 @@ export default function DemoPage() {
       sessionCtx.sendLine('D,0,80,0');
     }
   };
-  };
 
   // Live Interactive Typing handlers
   const handleLiveKeyDown = (e) => {
