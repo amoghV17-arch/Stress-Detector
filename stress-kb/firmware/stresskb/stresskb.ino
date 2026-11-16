@@ -54,49 +54,26 @@ DisplayData displayData;
 // Window Engine
 WindowEngine windowEngine;
 
-// Fast I2C bus check at boot (checks BH1750, 16x2 LCD, and SSD1306 OLED)
+// Full I2C bus scan at boot
 void scanI2CBus() {
 #ifdef ARDUINO
     Wire.setTimeOut(10);
 #endif
     bool foundAny = false;
 
-    // Check BH1750 (0x23 or 0x5C)
-    Wire.beginTransmission(I2C_ADDR_BH1750);
-    if (Wire.endTransmission() == 0) {
-        Serial.println("I2C: Found BH1750 at 0x23");
-        foundAny = true;
-    } else {
-        Wire.beginTransmission(0x5C);
+    for (uint8_t address = 1; address < 127; address++) {
+        Wire.beginTransmission(address);
         if (Wire.endTransmission() == 0) {
-            Serial.println("I2C: Found BH1750 at 0x5C");
             foundAny = true;
-        }
-    }
-
-    // Check 16x2 I2C LCD (0x27 or 0x3F)
-    Wire.beginTransmission(I2C_ADDR_LCD1602);
-    if (Wire.endTransmission() == 0) {
-        Serial.println("I2C: Found 16x2 LCD at 0x27");
-        foundAny = true;
-    } else {
-        Wire.beginTransmission(0x3F);
-        if (Wire.endTransmission() == 0) {
-            Serial.println("I2C: Found 16x2 LCD at 0x3F");
-            foundAny = true;
-        }
-    }
-
-    // Check SSD1306 OLED (0x3C or 0x3D)
-    Wire.beginTransmission(I2C_ADDR_OLED);
-    if (Wire.endTransmission() == 0) {
-        Serial.println("I2C: Found SSD1306 OLED at 0x3C");
-        foundAny = true;
-    } else {
-        Wire.beginTransmission(0x3D);
-        if (Wire.endTransmission() == 0) {
-            Serial.println("I2C: Found SSD1306 OLED at 0x3D");
-            foundAny = true;
+            if (address == I2C_ADDR_BH1750 || address == 0x5C) {
+                Serial.printf("I2C: Found BH1750 at 0x%02X\n", address);
+            } else if (address == I2C_ADDR_LCD1602 || address == 0x3F) {
+                Serial.printf("I2C: Found 16x2 LCD at 0x%02X\n", address);
+            } else if (address == I2C_ADDR_OLED || address == 0x3D) {
+                Serial.printf("I2C: Found SSD1306 OLED at 0x%02X\n", address);
+            } else {
+                Serial.printf("I2C: Device found at 0x%02X\n", address);
+            }
         }
     }
 
@@ -414,6 +391,14 @@ void loop() {
                         case CommandType::REPLAY_LUX:
                             displayData.lux = cmd.lux;
                             windowEngine.addLux(cmd.t, cmd.lux);
+                            break;
+
+                        case CommandType::DISP_SYNC:
+                            displayData.screen = ScreenType::MAIN;
+                            displayData.stressLevel = cmd.dispCls;
+                            displayData.confidence = cmd.dispConf;
+                            displayData.patternFlags = cmd.dispFlags;
+                            display.render(displayData);
                             break;
 
                         default:

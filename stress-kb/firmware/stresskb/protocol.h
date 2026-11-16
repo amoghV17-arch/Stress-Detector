@@ -18,7 +18,8 @@ enum class CommandType {
     KEY,
     FOCUS,
     HEARTBEAT,
-    REPLAY_LUX
+    REPLAY_LUX,
+    DISP_SYNC
 };
 
 struct ParsedCommand {
@@ -34,6 +35,11 @@ struct ParsedCommand {
     char sessionId[16]{0};
     char userId[16]{0};
     char mode[8]{0};
+
+    // DISP_SYNC fields
+    uint8_t dispCls{0};
+    float dispConf{0.0f};
+    uint8_t dispFlags{0};
 
     char warnCode[16]{0};
     char warnDetail[32]{0};
@@ -173,6 +179,20 @@ public:
             }
             strncpy(out.warnCode, "MALFORMED", sizeof(out.warnCode) - 1);
             strncpy(out.warnDetail, "R", sizeof(out.warnDetail) - 1);
+            return false;
+        }
+
+        // 7. D,<cls>,<conf_0_to_100>,<flags> (Display sync command from host)
+        if (strcmp(cmd, "D") == 0) {
+            if (fieldCount >= 4) {
+                out.type = CommandType::DISP_SYNC;
+                out.dispCls = (uint8_t)strtoul(fields[1], nullptr, 10);
+                out.dispConf = (float)strtod(fields[2], nullptr) / 100.0f;
+                out.dispFlags = (uint8_t)strtoul(fields[3], nullptr, 10);
+                return true;
+            }
+            strncpy(out.warnCode, "MALFORMED", sizeof(out.warnCode) - 1);
+            strncpy(out.warnDetail, "D", sizeof(out.warnDetail) - 1);
             return false;
         }
 

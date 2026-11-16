@@ -135,18 +135,26 @@ export default function DemoPage() {
           const latestWin = currentWins[currentWins.length - 1];
           const pred = latestWin.pred || {};
           const isAlertNow = Boolean(pred.alert);
+          const conf = pred.p ? Math.max(...pred.p) : 0.7;
+          const cls = pred.cls ?? 0;
+          const flags = pred.flags || 0;
 
           setOledState({
             screen: 'MAIN',
-            stressLevel: pred.cls ?? 0,
-            confidence: pred.p ? Math.max(...pred.p) : 0.7,
-            patternFlags: pred.flags || 0,
+            stressLevel: cls,
+            confidence: conf,
+            patternFlags: flags,
             lux: 300 + Math.floor(Math.sin(nextTime / 10000) * 30),
             linkOk: true,
             calWindows: 6,
             totalKeys: latestWin.n_keys || 50,
             isAlert: isAlertNow,
           });
+
+          // Sync physical ESP32 LCD screen via serial D command
+          if (sessionCtx?.sendLine) {
+            sessionCtx.sendLine(`D,${cls},${Math.round(conf * 100)},${flags}`);
+          }
 
           // Trigger 2px Edge Shake on Alert moment
           if (isAlertNow && !isAlertRef.current) {
@@ -200,6 +208,10 @@ export default function DemoPage() {
       totalKeys: 0,
       isAlert: false,
     });
+    if (sessionCtx?.sendLine) {
+      sessionCtx.sendLine('D,0,80,0');
+    }
+  };
   };
 
   // Live Interactive Typing handlers
